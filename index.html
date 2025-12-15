@@ -2,248 +2,180 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Haroon & Sons Consulting Quote</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
-  <div class="app">
-    <header class="topbar">
+  <main class="wrap">
+    <header class="hero">
       <div class="brand">
-        <img class="logo" src="logo.png" alt="Haroon & Sons 
-   <div class="brandText">
-  <h1>Haroon &amp; Sons Consulting Quote</h1>
-  <p class="tagline">Fast estimate • Clear scope • Clean totals</p>
-  <p class="contact">
-    📞 848-228-2528 &nbsp;•&nbsp; ✉️ Malik270230@gmail.com
-  </p>
-</div>       
+        <img class="logo" src="logo.png" alt="Logo" />
+        <div class="brandText">
+          <h1 id="companyName">Haroon &amp; Sons Consulting Quote</h1>
+          <p class="tagline" id="companyTagline">Fast estimate • Clear scope • Clean totals</p>
+          <p class="contact" id="companyContact">📞 848-228-2528 • ✉️ Malik270230@gmail.com</p>
+        </div>
       </div>
-
-      <nav class="tabs" role="tablist" aria-label="Pages">
-        <button class="tab active" data-tab="input">INPUT</button>
-        <button class="tab" data-tab="rates">RATES</button>
-        <button class="tab" data-tab="quote">QUOTE</button>
-        <button class="tab" data-tab="settings">SETTINGS</button>
-      </nav>
     </header>
 
-    <main class="panel">
-      <!-- INPUT -->
-      <section id="tab-input" class="tabPage active">
-        <h2>Project Inputs</h2>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="input">INPUT</button>
+      <button class="tab" data-tab="rates">RATES</button>
+      <button class="tab" data-tab="quote">QUOTE</button>
+      <button class="tab" data-tab="settings">SETTINGS</button>
+    </nav>
+
+    <!-- INPUT -->
+    <section class="panel active" id="tab-input">
+      <h2>Project Inputs</h2>
+
+      <div class="card">
+        <h3>Project Geometry</h3>
+
+        <label class="field">
+          <span>Project Area (SF)</span>
+          <input id="areaSF" inputmode="decimal" placeholder="e.g., 1400" />
+        </label>
 
         <div class="grid2">
-          <div class="card">
-            <h3>Project Geometry</h3>
-
-            <div class="field">
-              <label>Basement Floor SF</label>
-              <input id="inFloorSF" type="number" inputmode="decimal" placeholder="e.g., 1400" />
-            </div>
-
-            <div class="grid2">
-              <div class="field">
-                <label>Basement Length (ft) <span class="muted">(optional)</span></label>
-                <input id="inLen" type="number" inputmode="decimal" placeholder="e.g., 35" />
-              </div>
-              <div class="field">
-                <label>Basement Width (ft) <span class="muted">(optional)</span></label>
-                <input id="inWid" type="number" inputmode="decimal" placeholder="e.g., 40" />
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Perimeter (LF) <span class="muted">(optional override)</span></label>
-              <input id="inPerim" type="number" inputmode="decimal" placeholder="leave blank to auto-calc from L×W" />
-            </div>
-
-            <div class="field">
-              <label>Ceiling Height (ft)</label>
-              <input id="inHeight" type="number" inputmode="decimal" placeholder="e.g., 8" />
-            </div>
-
-            <div class="calcBox">
-              <div><span class="muted">Perimeter LF</span><strong id="outPerim">—</strong></div>
-              <div><span class="muted">Wall SF</span><strong id="outWallSF">—</strong></div>
-              <div><span class="muted">Paint/Drywall SF (walls+ceiling)</span><strong id="outPaintSF">—</strong></div>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>Customer / Job Info <span class="muted">(for PDF)</span></h3>
-
-            <div class="field">
-              <label>Customer Name</label>
-              <input id="inCustomer" type="text" placeholder="e.g., John Smith" />
-            </div>
-
-            <div class="field">
-              <label>Project Address</label>
-              <input id="inAddress" type="text" placeholder="e.g., 51 Winding Way, Princeton NJ" />
-            </div>
-
-            <div class="field">
-              <label>Notes (optional)</label>
-              <textarea id="inNotes" rows="4" placeholder="Scope assumptions, exclusions, schedule notes..."></textarea>
-            </div>
-
-            <div class="miniRow">
-              <button class="btn" id="btnCalc">Calculate Quote</button>
-              <button class="btn secondary" id="btnPrint">Print / Save PDF</button>
-            </div>
-
-            <div class="hint">
-              Tip: Leave Floor SF blank until you have it. Quote won’t calculate without it.
-            </div>
-          </div>
+          <label class="field">
+            <span>Project Length (ft) (optional)</span>
+            <input id="lenFT" inputmode="decimal" placeholder="e.g., 35" />
+          </label>
+          <label class="field">
+            <span>Project Width (ft) (optional)</span>
+            <input id="widFT" inputmode="decimal" placeholder="e.g., 40" />
+          </label>
         </div>
 
-        <div class="card">
-          <h3>Scope Toggles</h3>
+        <label class="field">
+          <span>Perimeter (LF) (optional override)</span>
+          <input id="perimOverride" inputmode="decimal" placeholder="leave blank to auto-calc from L×W" />
+        </label>
+
+        <label class="field">
+          <span>Ceiling Height (ft)</span>
+          <input id="heightFT" inputmode="decimal" placeholder="8" />
+        </label>
+
+        <div class="mini">
+          <div class="miniBox"><div class="miniLabel">Perimeter LF</div><div id="perimOut" class="miniVal">—</div></div>
+          <div class="miniBox"><div class="miniLabel">Wall SF</div><div id="wallOut" class="miniVal">—</div></div>
+          <div class="miniBox"><div class="miniLabel">Paint/Drywall SF</div><div id="paintOut" class="miniVal">—</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Customer / Job Info (for PDF)</h3>
+        <label class="field">
+          <span>Customer Name</span>
+          <input id="custName" placeholder="Customer name" />
+        </label>
+        <label class="field">
+          <span>Project Address</span>
+          <input id="custAddr" placeholder="Street, City, State ZIP" />
+        </label>
+        <label class="field">
+          <span>Notes (optional)</span>
+          <textarea id="custNotes" rows="3" placeholder="Scope assumptions, exclusions, schedule notes…"></textarea>
+        </label>
+
+        <div class="btnRow">
+          <button class="btn primary" id="btnCalc">Calculate Quote</button>
+          <button class="btn" id="btnPrint">Print / Save PDF</button>
+        </div>
+
+        <p class="hint" id="calcHint">Tip: Enter Project Area (SF) or Length & Width. Quote won’t calculate without area.</p>
+      </div>
+
+      <div class="card">
+        <details open>
+          <summary>Scope Toggles</summary>
           <div id="scopeList" class="list"></div>
-        </div>
+        </details>
 
-        <div class="card">
-          <h3>Fixture Counts (supply + install)</h3>
+        <details>
+          <summary>Fixture Counts (supply + install)</summary>
           <div id="fixtureList" class="list"></div>
-        </div>
+        </details>
 
-        <div class="card">
-          <h3>Doors (quantity)</h3>
+        <details>
+          <summary>Doors (quantity)</summary>
           <div id="doorList" class="list"></div>
-        </div>
+        </details>
 
-        <div class="card">
-          <h3>Add-on Supply Lines</h3>
+        <details>
+          <summary>Add-on Supply Lines</summary>
           <div id="addonList" class="list"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- RATES -->
+    <section class="panel" id="tab-rates">
+      <h2>Rates</h2>
+      <div class="card">
+        <label class="field">
+          <span>Service Type</span>
+          <select id="serviceType">
+            <option>Handyman</option>
+            <option>Contractor</option>
+          </select>
+        </label>
+        <div class="mini">
+          <div class="miniBox"><div class="miniLabel">Handyman ($/SF)</div><div id="rateHandy" class="miniVal">—</div></div>
+          <div class="miniBox"><div class="miniLabel">Contractor ($/SF)</div><div id="rateContract" class="miniVal">—</div></div>
         </div>
-      </section>
+        <p class="hint">This is your quick “SF pricing” option. Detailed line items are below in INPUT toggles.</p>
+      </div>
+    </section>
 
-      <!-- RATES -->
-      <section id="tab-rates" class="tabPage">
-        <h2>Rates (Unit Costs)</h2>
-        <p class="muted">These are COST inputs. Quote applies markups in SETTINGS.</p>
-
-        <div class="card">
-          <div class="rateTableWrap">
-            <table class="rateTable">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Unit</th>
-                  <th class="num">Material / Unit</th>
-                  <th class="num">Labor / Unit</th>
-                </tr>
-              </thead>
-              <tbody id="ratesTbody"></tbody>
-            </table>
-          </div>
+    <!-- QUOTE -->
+    <section class="panel" id="tab-quote">
+      <h2>Quote</h2>
+      <div class="card" id="quoteArea">
+        <div class="quoteTop" id="quoteSummary">Run Calculate to generate the quote.</div>
+        <div class="tableWrap">
+          <table class="quoteTable" id="quoteTable">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Unit</th>
+                <th class="num">Units</th>
+                <th class="num">Material (w/markup)</th>
+                <th class="num">Labor (w/markup)</th>
+                <th class="num">Sell Price</th>
+              </tr>
+            </thead>
+            <tbody id="quoteBody"></tbody>
+            <tfoot id="quoteFoot"></tfoot>
+          </table>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- QUOTE -->
-      <section id="tab-quote" class="tabPage">
-        <h2>Quote</h2>
-
-        <div class="card">
-          <div class="quoteHeader">
-            <div>
-              <h3>Quote Summary</h3>
-              <div class="muted" id="quoteMeta">Enter Floor SF and click Calculate.</div>
-            </div>
-            <div class="miniRow">
-              <button class="btn" id="btnPrint2">Print / Save PDF</button>
-            </div>
-          </div>
-
-          <div class="quoteTableWrap">
-            <table class="quoteTable">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Unit</th>
-                  <th class="num">Units</th>
-                  <th class="num">Materials</th>
-                  <th class="num">Labor</th>
-                  <th class="num">Sell Price</th>
-                </tr>
-              </thead>
-              <tbody id="quoteTbody"></tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="3" class="right"><strong>Totals</strong></td>
-                  <td class="num"><strong id="totMat">—</strong></td>
-                  <td class="num"><strong id="totLab">—</strong></td>
-                  <td class="num"><strong id="totSell">—</strong></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-
-          <!-- internal-only (hidden by default) -->
-          <div class="internal-only internalBox">
-            <strong>Internal pricing details</strong>
-            <div class="muted">
-              Materials markup: <span id="muMat"></span>% • Labor markup: <span id="muLab"></span>%
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- SETTINGS -->
-      <section id="tab-settings" class="tabPage">
-        <h2>Settings</h2>
-
+    <!-- SETTINGS -->
+    <section class="panel" id="tab-settings">
+      <h2>Settings</h2>
+      <div class="card">
         <div class="grid2">
-          <div class="card">
-            <h3>Markups</h3>
-
-            <div class="field">
-              <label>Materials Markup %</label>
-              <input id="setMatMU" type="number" inputmode="decimal" />
-            </div>
-
-            <div class="field">
-              <label>Labor Markup %</label>
-              <input id="setLabMU" type="number" inputmode="decimal" />
-            </div>
-
-            <div class="field">
-              <label class="checkRow">
-                <input type="checkbox" id="toggleInternalDetails" />
-                Show internal pricing details (markup)
-              </label>
-              <div class="muted">Off = customer view. On = shows internal markup info on QUOTE.</div>
-            </div>
-
-            <div class="miniRow">
-              <button class="btn secondary" id="btnReset">Reset to Spreadsheet Defaults</button>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>PDF Output</h3>
-            <p class="muted">
-              Print is formatted cleanly (header at top, totals included, page breaks controlled).
-            </p>
-
-            <div class="miniRow">
-              <button class="btn" id="btnPrint3">Print / Save PDF</button>
-            </div>
-
-            <div class="hint">
-              If your phone keeps showing old values: SETTINGS → Reset, then refresh with <code>?v=9999</code>.
-            </div>
-          </div>
+          <label class="field">
+            <span>Materials Markup (%)</span>
+            <input id="muMat" inputmode="decimal" placeholder="25" />
+          </label>
+          <label class="field">
+            <span>Labor Markup (%)</span>
+            <input id="muLab" inputmode="decimal" placeholder="35" />
+          </label>
         </div>
-      </section>
-    </main>
-  </div>
+        <p class="hint">Markup is used in the Quote summary and PDF. It should show the markup % (not random numbers).</p>
+      </div>
+    </section>
 
-  <!-- PRINT AREA (hidden on screen, used for PDF) -->
-  <div id="printArea" class="printArea" aria-hidden="true"></div>
+    <!-- PRINT AREA -->
+    <section id="printRoot" class="printRoot" aria-hidden="true"></section>
+  </main>
 
   <script src="app.js"></script>
 </body>
