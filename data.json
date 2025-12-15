@@ -1,64 +1,85 @@
 {
   "company": {
     "name": "Haroon & Sons Consulting",
-    "tagline": "Fast estimate • Clear scope • Clean totals",
     "phone": "848-228-2528",
-    "email": "Malik270230@gmail.com"
+    "email": "Malik270230@gmail.com",
+    "logoPath": "./logo.png"
   },
   "defaults": {
-    "serviceType": "Contractor",
-    "ceilingHeightFt": 8,
-    "materialsMarkupPct": 25,
-    "laborMarkupPct": 35
+    "heightFt": 8,
+    "materialsMarkup": 0.25,
+    "laborMarkup": 0.35,
+    "handymanMultiplier": 1.00,
+    "contractorMultiplier": 1.00
   },
-  "sqftRates": {
-    "Handyman": 75,
-    "Contractor": 55
-  },
-  "groups": [
-    {
-      "id": "scope",
-      "title": "Scope Toggles",
-      "items": [
-        { "id": "framing", "label": "Framing (walls)", "unit": "WALL_SF", "matRate": 2.10, "labRate": 3.20, "defaultOn": true },
-        { "id": "electrical", "label": "Electrical (whole project)", "unit": "AREA_SF", "matRate": 2.50, "labRate": 3.90, "defaultOn": true },
-        { "id": "insulation", "label": "Insulation (walls)", "unit": "WALL_SF", "matRate": 0.85, "labRate": 0.90, "defaultOn": true },
-        { "id": "drywallHang", "label": "Drywall Hang (walls + ceiling)", "unit": "PAINT_SF", "matRate": 2.00, "labRate": 3.00, "defaultOn": true },
-        { "id": "drywallFinish", "label": "Drywall Finish / Taping (walls + ceiling)", "unit": "PAINT_SF", "matRate": 0.50, "labRate": 2.10, "defaultOn": true },
-        { "id": "painting", "label": "Painting (walls + ceiling)", "unit": "PAINT_SF", "matRate": 1.30, "labRate": 2.35, "defaultOn": true },
-        { "id": "flooring", "label": "Flooring (entire floor)", "unit": "AREA_SF", "matRate": 3.75, "labRate": 1.75, "defaultOn": true },
-        { "id": "baseMolding", "label": "Base Molding (perimeter)", "unit": "PERIM_LF", "matRate": 1.00, "labRate": 1.50, "defaultOn": true }
-      ]
-    },
-    {
-      "id": "fixtures",
-      "title": "Fixtures",
-      "items": [
-        { "id": "toilet", "label": "Plumbing: Toilet", "unit": "EACH", "matRate": 400, "labRate": 370 },
-        { "id": "vanity", "label": "Plumbing: Vanity + Faucet", "unit": "EACH", "matRate": 525, "labRate": 750 },
-        { "id": "shower", "label": "Plumbing: Shower package", "unit": "EACH", "matRate": 1350, "labRate": 500 },
-        { "id": "kitchenSink", "label": "Plumbing: Kitchen sink + faucet", "unit": "EACH", "matRate": 525, "labRate": 600 },
-        { "id": "dishwasher", "label": "Plumbing: Dishwasher", "unit": "EACH", "matRate": 350, "labRate": 650 }
-      ]
-    },
-    {
-      "id": "doors",
-      "title": "Doors",
-      "items": [
-        { "id": "doorHollow", "label": "Door: Interior Hollow Core", "unit": "EACH", "matRate": 225, "labRate": 285 },
-        { "id": "doorSolid", "label": "Door: Interior Solid Core", "unit": "EACH", "matRate": 275, "labRate": 475 },
-        { "id": "doorCloset", "label": "Door: Closet", "unit": "EACH", "matRate": 175, "labRate": 200 }
-      ]
-    },
-    {
-      "id": "addons",
-      "title": "Add-ons",
-      "items": [
-        { "id": "subpanel", "label": "Subpanel 100A (add-on)", "unit": "EACH", "matRate": 650, "labRate": 300, "defaultOn": false },
-        { "id": "plumbingAllowance", "label": "Plumbing Supplies Allowance", "unit": "EACH", "matRate": 950, "labRate": 0, "defaultOn": true },
-        { "id": "doorHardware", "label": "Door Hardware Allowance", "unit": "EACH", "matRate": 225, "labRate": 0, "defaultOn": true },
-        { "id": "consumablesPct", "label": "Job Consumables & Fasteners (% of raw materials)", "unit": "PCT_MAT", "pct": 5, "defaultOn": true }
-      ]
-    }
-  ]
+  "scopeItems": [
+    { "key": "framing", "label": "Framing (walls)", "unit": "WALL_SF" },
+    { "key": "electrical", "label": "Electrical (whole project)", "unit": "FLOOR_SF" },
+    { "key": "subpanel", "label": "Subpanel 100A (add-on)", "unit": "EACH" },
+    { "key": "insulation", "label": "Insulation (walls)", "unit": "WALL_SF" },
+    { "key": "drywallHang", "label": "Drywall Hang (walls + ceiling)", "unit": "PAINT_SF" },
+    { "key": "drywallFinish", "label": "Drywall Finish / Taping (walls + ceiling)", "unit": "PAINT_SF" },
+    { "key": "painting", "label": "Painting (walls + ceiling)", "unit": "PAINT_SF" },
+    { "key": "flooring", "label": "Flooring (entire floor)", "unit": "FLOOR_SF" },
+    { "key": "baseMolding", "label": "Base Molding (LF)", "unit": "LF" }
+  ],
+  "fixtures": [
+    { "key": "toilet", "label": "Bathroom: Toilet", "unit": "EACH" },
+    { "key": "vanityFaucet", "label": "Bathroom: Vanity + Faucet", "unit": "EACH" },
+    { "key": "showerPkg", "label": "Bathroom: Shower package", "unit": "EACH" },
+    { "key": "kitchenSinkFaucet", "label": "Kitchenette: Sink + Faucet", "unit": "EACH" },
+    { "key": "dishwasher", "label": "Kitchenette: Dishwasher", "unit": "EACH" },
+    { "key": "fridgeIce", "label": "Kitchenette: Fridge ice-maker", "unit": "EACH" },
+    { "key": "barSinkFaucet", "label": "Wet Bar: Bar sink + faucet", "unit": "EACH" },
+    { "key": "upflush", "label": "Upflush / Ejector Pump System", "unit": "EACH" }
+  ],
+  "doors": [
+    { "key": "doorHollow", "label": "Interior Door — Hollow Core", "unit": "EACH" },
+    { "key": "doorSolid", "label": "Interior Door — Solid Core", "unit": "EACH" },
+    { "key": "doorCloset", "label": "Closet Door — Bifold/Slider", "unit": "EACH" }
+  ],
+  "addons": [
+    { "key": "drywallSupplies", "label": "Drywall Supplies", "unit": "PAINT_SF" },
+    { "key": "paintSupplies", "label": "Paint Supplies", "unit": "PAINT_SF" },
+    { "key": "electricalSupplies", "label": "Electrical Supplies", "unit": "FLOOR_SF" },
+    { "key": "plumbingSuppliesAllowance", "label": "Plumbing Supplies Allowance (each fixture)", "unit": "EACH_FIXTURE" },
+    { "key": "doorHardwareAllowance", "label": "Door Hardware Allowance (each door)", "unit": "EACH_DOOR" },
+    { "key": "shoeMolding", "label": "Shoe Molding (LF)", "unit": "LF" },
+    { "key": "doorCasing", "label": "Door Casing (LF)", "unit": "DOOR_CASING_LF" },
+    { "key": "jobConsumables", "label": "Job Consumables & Fasteners (% of raw materials)", "unit": "PCT_MAT" }
+  ],
+  "rates": {
+    "Framing (walls)": { "unit": "WALL_SF", "mat": 2.25, "lab": 3.00 },
+    "Electrical (whole project)": { "unit": "FLOOR_SF", "mat": 2.75, "lab": 4.75 },
+    "Subpanel 100A (add-on)": { "unit": "EACH", "mat": 650, "lab": 950 },
+    "Insulation (walls)": { "unit": "WALL_SF", "mat": 1.00, "lab": 0.75 },
+    "Drywall Hang (walls + ceiling)": { "unit": "PAINT_SF", "mat": 2.00, "lab": 3.25 },
+    "Drywall Finish / Taping (walls + ceiling)": { "unit": "PAINT_SF", "mat": 0.50, "lab": 2.60 },
+    "Painting (walls + ceiling)": { "unit": "PAINT_SF", "mat": 1.00, "lab": 1.80 },
+    "Flooring (entire floor)": { "unit": "FLOOR_SF", "mat": 4.25, "lab": 3.25 },
+    "Base Molding (LF)": { "unit": "LF", "mat": 1.40, "lab": 1.58 },
+
+    "Bathroom: Toilet": { "unit": "EACH", "mat": 320, "lab": 450 },
+    "Bathroom: Vanity + Faucet": { "unit": "EACH", "mat": 525, "lab": 750 },
+    "Bathroom: Shower package": { "unit": "EACH", "mat": 525, "lab": 1325 },
+    "Kitchenette: Sink + Faucet": { "unit": "EACH", "mat": 200, "lab": 450 },
+    "Kitchenette: Dishwasher": { "unit": "EACH", "mat": 350, "lab": 650 },
+    "Kitchenette: Fridge ice-maker": { "unit": "EACH", "mat": 200, "lab": 120 },
+    "Wet Bar: Bar sink + faucet": { "unit": "EACH", "mat": 525, "lab": 450 },
+    "Upflush / Ejector Pump System": { "unit": "EACH", "mat": 1350, "lab": 525 },
+
+    "Interior Door — Hollow Core": { "unit": "EACH", "mat": 225, "lab": 285 },
+    "Interior Door — Solid Core": { "unit": "EACH", "mat": 275, "lab": 475 },
+    "Closet Door — Bifold/Slider": { "unit": "EACH", "mat": 175, "lab": 200 },
+
+    "Drywall Supplies": { "unit": "PAINT_SF", "mat": 0.45, "lab": 0.15 },
+    "Paint Supplies": { "unit": "PAINT_SF", "mat": 0.15, "lab": 0.05 },
+    "Electrical Supplies": { "unit": "FLOOR_SF", "mat": 0.85, "lab": 0.10 },
+    "Plumbing Supplies Allowance (each fixture)": { "unit": "EACH", "mat": 160, "lab": 0 },
+    "Door Hardware Allowance (each door)": { "unit": "EACH", "mat": 56.25, "lab": 0 },
+    "Shoe Molding (LF)": { "unit": "LF", "mat": 0.90, "lab": 0.225 },
+    "Door Casing (LF)": { "unit": "LF", "mat": 1.00, "lab": 0.25 },
+
+    "Job Consumables & Fasteners (% of raw materials)": { "unit": "PCT_MAT", "mat": 0.05, "lab": 0 }
+  }
 }
