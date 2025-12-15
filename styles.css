@@ -99,3 +99,56 @@ th{position:sticky;top:0;background:rgba(11,18,32,.95);text-align:left;font-size
 @media (max-width:520px){
   .grid,.grid.small,.grid.toggles{grid-template-columns:1fr}
 }
+/* --- FIX HEADER ALIGNMENT (MOBILE) --- */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;            /* lets header stack nicely on phones */
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;               /* prevents overflow */
+  flex: 1 1 260px;
+}
+
+/* Your logo image */
+.brandLogo{
+  height:44px;               /* smaller + consistent */
+  width:auto;
+  max-width:140px;           /* prevents it from taking over */
+  object-fit:contain;
+  background:transparent;    /* kill the white box look */
+  padding:0;
+  border-radius:0;
+}
+
+/* Make text behave */
+.title, .subtitle{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width: 220px;          /* stops it from pushing buttons off */
+}
+
+/* Buttons block */
+.top-actions{
+  display:flex;
+  gap:8px;
+  flex: 0 1 auto;
+}
+
+/* On very small screens, stack actions under the brand */
+@media (max-width: 420px){
+  .top-actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+  .title, .subtitle{
+    max-width: 100%;
+  }
+}
