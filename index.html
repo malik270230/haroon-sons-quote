@@ -3,18 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NJ Basement Quote Tool — Web App</title>
+  <title>Haroon and Sons Consulting Quote</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
   <header class="topbar">
-  <div class="brand">
-    <img src="logo.png" alt="Haroon and Sons Consulting LLC" class="brandLogo">
-    <div>
-      <div class="title">Haroon and Sons Consulting Quote</div>
-      <div class="subtitle">Vision • Alignment • Execution</div>
+    <div class="brand">
+      <img src="logo.png" alt="Haroon and Sons Consulting LLC" class="brandLogo" />
+      <div class="brandText">
+        <div class="title">Haroon and Sons Consulting Quote</div>
+        <div class="subtitle">Vision • Alignment • Execution</div>
+      </div>
     </div>
-  </div>
+
     <div class="top-actions">
       <button id="btnReset" class="btn ghost" type="button">Reset</button>
       <button id="btnShare" class="btn" type="button">Copy Summary</button>
@@ -29,18 +31,23 @@
         <label>Basement Floor SF
           <input id="floorSf" type="number" min="0" step="0.01" value="1400" />
         </label>
+
         <label>Length (ft) (optional)
           <input id="lenFt" type="number" min="0" step="0.01" placeholder="Leave blank to use SF" />
         </label>
+
         <label>Width (ft) (optional)
           <input id="widFt" type="number" min="0" step="0.01" placeholder="Leave blank to use SF" />
         </label>
+
         <label>Perimeter (LF) (optional)
           <input id="perLf" type="number" min="0" step="0.01" placeholder="Leave blank for auto" />
         </label>
+
         <label>Ceiling Height (ft)
           <input id="ceilHt" type="number" min="0" step="0.01" value="8" />
         </label>
+
         <div class="kpi">
           <div class="kpiRow"><span>Floor SF</span><strong id="kFloor">—</strong></div>
           <div class="kpiRow"><span>Perimeter LF</span><strong id="kPer">—</strong></div>
@@ -57,6 +64,7 @@
         <label>Materials Markup
           <input id="matMu" type="number" min="0" step="0.01" value="0.25" />
         </label>
+
         <label>Labor Markup
           <input id="labMu" type="number" min="0" step="0.01" value="0.35" />
         </label>
@@ -125,6 +133,7 @@
         <label>Closet Doors
           <input id="dCloset" type="number" min="0" step="1" value="6" />
         </label>
+
         <div class="kpi">
           <div class="kpiRow"><span>Total Doors</span><strong id="kDoors">—</strong></div>
           <div class="kpiRow"><span>Door Casing LF</span><strong id="kCasing">—</strong></div>
@@ -145,7 +154,7 @@
         <label class="toggle"><input id="tDrySup" type="checkbox" checked /> Drywall Supplies</label>
         <label class="toggle"><input id="tPaintSup" type="checkbox" checked /> Paint Supplies</label>
         <label class="toggle"><input id="tElecSup" type="checkbox" checked /> Electrical Supplies</label>
-        <label class="toggle"><input id="tConsumables" type="checkbox" checked /> Job Consumables & Fasteners (5% of raw materials)</label>
+        <label class="toggle"><input id="tConsumables" type="checkbox" checked /> Job Consumables &amp; Fasteners (5% of raw materials)</label>
       </div>
     </section>
 
