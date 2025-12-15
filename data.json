@@ -1,11 +1,1 @@
-{
-  "items": [
-    { "name": "Framing (allowance)", "unitType": "sf_floor", "matPerUnit": 6.00, "labPerUnit": 8.00 },
-    { "name": "Electrical (allowance)", "unitType": "sf_floor", "matPerUnit": 4.00, "labPerUnit": 6.00 },
-    { "name": "Insulation (walls)", "unitType": "sf_wall", "matPerUnit": 1.25, "labPerUnit": 1.75 },
-    { "name": "Drywall (hang + finish)", "unitType": "sf_paint", "matPerUnit": 1.60, "labPerUnit": 2.40 },
-    { "name": "Painting", "unitType": "sf_paint", "matPerUnit": 0.55, "labPerUnit": 1.05 },
-    { "name": "Flooring", "unitType": "sf_floor", "matPerUnit": 3.25, "labPerUnit": 2.25 },
-    { "name": "Base molding", "unitType": "lf_base", "matPerUnit": 1.10, "labPerUnit": 1.40 }
-  ]
-}
+
