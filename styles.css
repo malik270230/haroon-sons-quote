@@ -3,10 +3,7 @@
   --card:#0f1b33;
   --text:#e9eefc;
   --muted:#a9b6d6;
-  --line:rgba(255,255,255,0.12);
-  --accent:#7aa2ff;
-  --accent2:#4ee1c1;
-  --danger:#ff6b6b;
+  --line:rgba(255,255,255,.12);
 }
 
 *{box-sizing:border-box}
@@ -18,224 +15,119 @@ body{
   font:15px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
 }
 
-/* =========================
-   HEADER (CLEAN + MOBILE SAFE)
-   ========================= */
+/* ================= HEADER ================= */
 .topbar{
   position:sticky;
   top:0;
-  z-index:10;
-
+  z-index:20;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;
-
-  padding:14px 16px;
-  background:rgba(11,18,32,.82);
-  backdrop-filter: blur(10px);
+  gap:14px;
+  padding:12px 16px;
+  background:rgba(11,18,32,.92);
   border-bottom:1px solid var(--line);
 }
 
+/* Brand */
 .brand{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:12px;
   min-width:0;
-  flex:1 1 260px;
 }
 
+/* HARD CLIPPED LOGO */
+.logoWrap{
+  height:42px;
+  width:120px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+}
+
+.logoWrap img{
+  height:42px;
+  width:auto;
+  object-fit:contain;
+  display:block;
+}
+
+/* Text */
 .brandText{
   min-width:0;
-}
-
-.brandLogo{
-  height:44px !important;
-  width:auto !important;
-  max-width:150px !important;
-  object-fit:contain !important;
-  display:block !important;
 }
 
 .title{
   font-weight:800;
   font-size:16px;
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:260px;
 }
 
 .subtitle{
-  color:var(--muted);
   font-size:12px;
-  margin-top:2px;
+  color:var(--muted);
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:260px;
 }
 
+/* Buttons */
 .top-actions{
   display:flex;
   gap:8px;
   flex-wrap:wrap;
-  justify-content:flex-end;
 }
 
-@media (max-width:420px){
-  .top-actions{
-    width:100%;
-    justify-content:flex-start;
-  }
-  .title,.subtitle{
-    max-width:100%;
-  }
-}
-
-/* =========================
-   BUTTONS
-   ========================= */
 .btn{
   border:1px solid var(--line);
-  background:linear-gradient(135deg,rgba(122,162,255,.25),rgba(78,225,193,.12));
+  background:rgba(255,255,255,.05);
   color:var(--text);
-  padding:10px 12px;
-  border-radius:12px;
-  cursor:pointer;
+  padding:8px 12px;
+  border-radius:10px;
 }
+
 .btn.ghost{background:transparent}
 
-/* =========================
-   LAYOUT / CARDS
-   ========================= */
+/* Mobile stacking */
+@media(max-width:520px){
+  .topbar{flex-wrap:wrap}
+  .top-actions{width:100%}
+}
+
+/* ================= LAYOUT ================= */
 .wrap{max-width:1100px;margin:0 auto;padding:16px}
 
 .card{
   background:rgba(15,27,51,.92);
   border:1px solid var(--line);
   border-radius:16px;
-  padding:14px 14px 16px;
+  padding:14px;
   margin:12px 0;
 }
 
 h2{margin:0 0 10px;font-size:16px}
 
-/* =========================
-   GRIDS
-   ========================= */
 .grid{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(3,1fr);
   gap:10px;
 }
 
-.grid.small{grid-template-columns:repeat(4,minmax(0,1fr))}
-.grid.toggles{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
 
-@media (max-width:900px){
-  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid.small{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid.toggles{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-
-@media (max-width:520px){
-  .grid,.grid.small,.grid.toggles{grid-template-columns:1fr}
-}
-
-/* =========================
-   FORMS
-   ========================= */
-label{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  color:var(--muted);
-}
+label{display:flex;flex-direction:column;gap:6px;color:var(--muted)}
 
 input{
-  width:100%;
-  padding:10px 10px;
+  padding:10px;
   border-radius:12px;
   border:1px solid var(--line);
   background:rgba(0,0,0,.18);
   color:var(--text);
-  outline:none;
-}
-
-.toggle{
-  flex-direction:row;
-  align-items:center;
-  gap:10px;
-  color:var(--text);
-}
-
-.toggle input{width:auto}
-
-/* =========================
-   KPI BOX
-   ========================= */
-.kpi{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:10px 12px;
-  background:rgba(0,0,0,.14);
-  grid-column: span 1;
-}
-.kpiRow{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  padding:3px 0;
-  color:var(--muted);
-}
-.kpiRow strong{color:var(--text)}
-
-.hint{color:var(--muted);margin:10px 2px 0;font-size:13px}
-
-/* =========================
-   TABLE
-   ========================= */
-.tableWrap{
-  overflow:auto;
-  border-radius:14px;
-  border:1px solid var(--line);
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:820px;
-  background:rgba(0,0,0,.12);
-}
-
-th,td{
-  padding:10px 10px;
-  border-bottom:1px solid var(--line);
-}
-
-th{
-  position:sticky;
-  top:0;
-  background:rgba(11,18,32,.95);
-  text-align:left;
-  font-size:12px;
-  color:var(--muted);
-}
-
-.right{text-align:right}
-
-.sectionRow td{
-  background:rgba(122,162,255,.10);
-  color:var(--text);
-  font-weight:700;
-  border-bottom:1px solid rgba(122,162,255,.22);
 }
 
 .footer{
-  color:var(--muted);
   text-align:center;
-  margin:18px 0 12px;
+  color:var(--muted);
   font-size:12px;
+  margin:16px 0;
 }
