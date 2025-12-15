@@ -9,16 +9,16 @@
 
 <body>
   <div class="app">
-    <header class="top">
+    <header class="topbar">
       <div class="brand">
-        <img src="logo.png" alt="Haroon & Sons Consulting" class="logo" />
+        <img class="logo" src="logo.png" alt="Haroon & Sons Consulting" />
         <div class="brandText">
-          <h1>Haroon & Sons Consulting Quote</h1>
-          <p>Fast estimate • Clear scope • Clean totals</p>
+          <h1>Haroon &amp; Sons Consulting Quote</h1>
+          <p class="tagline">Fast estimate • Clear scope • Clean totals</p>
         </div>
       </div>
 
-      <nav class="tabs" role="tablist" aria-label="Quote Tool Tabs">
+      <nav class="tabs" role="tablist" aria-label="Pages">
         <button class="tab active" data-tab="input">INPUT</button>
         <button class="tab" data-tab="rates">RATES</button>
         <button class="tab" data-tab="quote">QUOTE</button>
@@ -26,17 +26,34 @@
       </nav>
     </header>
 
-    <main class="main">
+    <main class="panel">
       <!-- INPUT -->
-      <section class="panel active" id="tab-input">
-        <div class="card">
-          <h2>Project Inputs</h2>
+      <section id="tab-input" class="tabPage active">
+        <h2>Project Inputs</h2>
 
-          <div class="grid2">
+        <div class="grid2">
+          <div class="card">
+            <h3>Project Geometry</h3>
+
             <div class="field">
               <label>Basement Floor SF</label>
               <input id="inFloorSF" type="number" inputmode="decimal" placeholder="e.g., 1400" />
-              <div class="hint">If you enter Length + Width, Floor SF will auto-calc.</div>
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label>Basement Length (ft) <span class="muted">(optional)</span></label>
+                <input id="inLen" type="number" inputmode="decimal" placeholder="e.g., 35" />
+              </div>
+              <div class="field">
+                <label>Basement Width (ft) <span class="muted">(optional)</span></label>
+                <input id="inWid" type="number" inputmode="decimal" placeholder="e.g., 40" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Perimeter (LF) <span class="muted">(optional override)</span></label>
+              <input id="inPerim" type="number" inputmode="decimal" placeholder="leave blank to auto-calc from L×W" />
             </div>
 
             <div class="field">
@@ -44,142 +61,102 @@
               <input id="inHeight" type="number" inputmode="decimal" placeholder="e.g., 8" />
             </div>
 
-            <div class="field">
-              <label>Basement Length (ft) (optional)</label>
-              <input id="inLen" type="number" inputmode="decimal" placeholder="e.g., 35" />
-            </div>
-
-            <div class="field">
-              <label>Basement Width (ft) (optional)</label>
-              <input id="inWid" type="number" inputmode="decimal" placeholder="e.g., 40" />
-            </div>
-
-            <div class="field">
-              <label>Perimeter LF (optional override)</label>
-              <input id="inPerim" type="number" inputmode="decimal" placeholder="leave blank to auto-calc" />
-              <div class="hint">If blank, we use L×W (if provided) or assume a square from Floor SF.</div>
-            </div>
-
-            <div class="field">
-              <label>Customer Name (for PDF)</label>
-              <input id="inCustomer" type="text" placeholder="Customer name" />
-            </div>
-
-            <div class="field">
-              <label>Customer Address (for PDF)</label>
-              <input id="inAddress" type="text" placeholder="Customer address" />
-            </div>
-
-            <div class="field">
-              <label>Project Notes (for PDF)</label>
-              <input id="inNotes" type="text" placeholder="Optional notes" />
+            <div class="calcBox">
+              <div><span class="muted">Perimeter LF</span><strong id="outPerim">—</strong></div>
+              <div><span class="muted">Wall SF</span><strong id="outWallSF">—</strong></div>
+              <div><span class="muted">Paint/Drywall SF (walls+ceiling)</span><strong id="outPaintSF">—</strong></div>
             </div>
           </div>
 
-          <div class="divider"></div>
+          <div class="card">
+            <h3>Customer / Job Info <span class="muted">(for PDF)</span></h3>
 
-          <h3>Scope Toggles (unit-level)</h3>
+            <div class="field">
+              <label>Customer Name</label>
+              <input id="inCustomer" type="text" placeholder="e.g., John Smith" />
+            </div>
+
+            <div class="field">
+              <label>Project Address</label>
+              <input id="inAddress" type="text" placeholder="e.g., 51 Winding Way, Princeton NJ" />
+            </div>
+
+            <div class="field">
+              <label>Notes (optional)</label>
+              <textarea id="inNotes" rows="4" placeholder="Scope assumptions, exclusions, schedule notes..."></textarea>
+            </div>
+
+            <div class="miniRow">
+              <button class="btn" id="btnCalc">Calculate Quote</button>
+              <button class="btn secondary" id="btnPrint">Print / Save PDF</button>
+            </div>
+
+            <div class="hint">
+              Tip: Leave Floor SF blank until you have it. Quote won’t calculate without it.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Scope Toggles</h3>
           <div id="scopeList" class="list"></div>
+        </div>
 
-          <div class="divider"></div>
+        <div class="card">
+          <h3>Fixture Counts (supply + install)</h3>
+          <div id="fixtureList" class="list"></div>
+        </div>
 
-          <h3>Plumbing Fixtures (qty)</h3>
-          <div id="plumbList" class="list"></div>
-
-          <div class="divider"></div>
-
-          <h3>Doors (qty)</h3>
+        <div class="card">
+          <h3>Doors (quantity)</h3>
           <div id="doorList" class="list"></div>
+        </div>
 
-          <div class="divider"></div>
-
-          <h3>Add-on Supply Lines (toggle)</h3>
+        <div class="card">
+          <h3>Add-on Supply Lines</h3>
           <div id="addonList" class="list"></div>
-
-          <div class="actions">
-            <button class="btn" id="btnCalc">Calculate Quote</button>
-          </div>
         </div>
       </section>
 
       <!-- RATES -->
-      <section class="panel" id="tab-rates">
+      <section id="tab-rates" class="tabPage">
+        <h2>Rates (Unit Costs)</h2>
+        <p class="muted">These are COST inputs. Quote applies markups in SETTINGS.</p>
+
         <div class="card">
-          <div class="row">
-            <h2>Rates (unit costs)</h2>
-            <button class="btn ghost" id="btnResetRates">Reset rates to defaults</button>
-          </div>
-
-          <div class="hint">
-            These are <b>unit costs</b> split into <b>Material</b> and <b>Labor</b>. The Quote uses markups to calculate sell price.
-          </div>
-
-          <div class="tableWrap">
-            <table class="table" id="ratesTable">
+          <div class="rateTableWrap">
+            <table class="rateTable">
               <thead>
                 <tr>
-                  <th>ITEM</th>
-                  <th>UNIT</th>
-                  <th class="num">MAT / UNIT</th>
-                  <th class="num">LAB / UNIT</th>
+                  <th>Item</th>
+                  <th>Unit</th>
+                  <th class="num">Material / Unit</th>
+                  <th class="num">Labor / Unit</th>
                 </tr>
               </thead>
-              <tbody id="ratesBody"></tbody>
+              <tbody id="ratesTbody"></tbody>
             </table>
           </div>
         </div>
       </section>
 
       <!-- QUOTE -->
-      <section class="panel" id="tab-quote">
+      <section id="tab-quote" class="tabPage">
+        <h2>Quote</h2>
+
         <div class="card">
-          <div class="row">
-            <h2>Quote</h2>
-            <button class="btn" id="btnPrint">Print / Save PDF</button>
-          </div>
-
-          <div class="summary" id="quoteSummary"></div>
-
-          <div class="tableWrap">
-            <table class="table" id="quoteTable">
-              <thead>
-                <tr>
-                  <th>ITEM</th>
-                  <th>UNIT</th>
-                  <th class="num">UNITS</th>
-                  <th class="num">MATERIAL</th>
-                  <th class="num">LABOR</th>
-                  <th class="num">SELL PRICE</th>
-                </tr>
-              </thead>
-              <tbody id="quoteBody"></tbody>
-            </table>
-          </div>
-
-          <div class="totals" id="quoteTotals"></div>
-
-          <!-- PRINT-ONLY LAYOUT -->
-          <div class="printOnly" id="printArea">
-            <div class="printHeader">
-              <div class="printBrand">
-                <img src="logo.png" class="printLogo" alt="Logo" />
-                <div>
-                  <div class="printTitle">Haroon &amp; Sons Consulting</div>
-                  <div class="printSub">Project Quote</div>
-                </div>
-              </div>
-
-              <div class="printMeta">
-                <div><b>Date:</b> <span id="pDate"></span></div>
-                <div><b>Customer:</b> <span id="pCustomer"></span></div>
-                <div><b>Address:</b> <span id="pAddress"></span></div>
-                <div><b>Notes:</b> <span id="pNotes"></span></div>
-              </div>
+          <div class="quoteHeader">
+            <div>
+              <h3>Quote Summary</h3>
+              <div class="muted" id="quoteMeta">Enter Floor SF and click Calculate.</div>
             </div>
+            <div class="miniRow">
+              <button class="btn" id="btnPrint2">Print / Save PDF</button>
+            </div>
+          </div>
 
-            <div class="printKpis" id="pKpis"></div>
-
-            <table class="printTable" id="printTable">
+          <div class="quoteTableWrap">
+            <table class="quoteTable">
               <thead>
                 <tr>
                   <th>Item</th>
@@ -190,62 +167,80 @@
                   <th class="num">Sell Price</th>
                 </tr>
               </thead>
-              <tbody id="printBody"></tbody>
+              <tbody id="quoteTbody"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="right"><strong>Totals</strong></td>
+                  <td class="num"><strong id="totMat">—</strong></td>
+                  <td class="num"><strong id="totLab">—</strong></td>
+                  <td class="num"><strong id="totSell">—</strong></td>
+                </tr>
+              </tfoot>
             </table>
+          </div>
 
-            <div class="printTotals" id="printTotals"></div>
-
-            <div class="printFooter">
-              <div class="tiny">Haroon &amp; Sons Consulting — Quote generated from unit-level scope. Final price subject to site verification and permit/code requirements as applicable.</div>
+          <!-- internal-only (hidden by default) -->
+          <div class="internal-only internalBox">
+            <strong>Internal pricing details</strong>
+            <div class="muted">
+              Materials markup: <span id="muMat"></span>% • Labor markup: <span id="muLab"></span>%
             </div>
           </div>
         </div>
       </section>
 
       <!-- SETTINGS -->
-      <section class="panel" id="tab-settings">
-        <div class="card">
-          <h2>Settings</h2>
+      <section id="tab-settings" class="tabPage">
+        <h2>Settings</h2>
 
-          <div class="grid2">
+        <div class="grid2">
+          <div class="card">
+            <h3>Markups</h3>
+
             <div class="field">
-              <label>Materials Markup (%)</label>
+              <label>Materials Markup %</label>
               <input id="setMatMU" type="number" inputmode="decimal" />
             </div>
 
             <div class="field">
-              <label>Labor Markup (%)</label>
+              <label>Labor Markup %</label>
               <input id="setLabMU" type="number" inputmode="decimal" />
             </div>
 
             <div class="field">
-              <label class="rowInline">
-                <input type="checkbox" id="setShowInternal" />
-                Show internal markup details on screen
+              <label class="checkRow">
+                <input type="checkbox" id="toggleInternalDetails" />
+                Show internal pricing details (markup)
               </label>
-              <div class="hint">OFF = customer view. ON = shows markup line in Quote Summary (screen only). PDF never shows markup.</div>
+              <div class="muted">Off = customer view. On = shows internal markup info on QUOTE.</div>
             </div>
 
-            <div class="field">
-              <label class="rowInline">
-                <input type="checkbox" id="setDefaultsBlank" />
-                Default inputs blank (no 1400)
-              </label>
-              <div class="hint">Turn ON to start with blank fields.</div>
+            <div class="miniRow">
+              <button class="btn secondary" id="btnReset">Reset to Spreadsheet Defaults</button>
             </div>
           </div>
 
-          <div class="actions">
-            <button class="btn ghost" id="btnResetAll">Reset EVERYTHING</button>
-          </div>
+          <div class="card">
+            <h3>PDF Output</h3>
+            <p class="muted">
+              Print is formatted cleanly (header at top, totals included, page breaks controlled).
+            </p>
 
-          <div class="hint">
-            Reset EVERYTHING clears saved inputs/rates/settings stored on your device.
+            <div class="miniRow">
+              <button class="btn" id="btnPrint3">Print / Save PDF</button>
+            </div>
+
+            <div class="hint">
+              If your phone keeps showing old values: SETTINGS → Reset, then refresh with <code>?v=9999</code>.
+            </div>
           </div>
         </div>
       </section>
     </main>
   </div>
+
+  <!-- PRINT AREA (hidden on screen, used for PDF) -->
+  <div id="printArea" class="printArea" aria-hidden="true"></div>
 
   <script src="app.js"></script>
 </body>
