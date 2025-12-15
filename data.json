@@ -5,11 +5,11 @@
     "labor_base_rate": 75
   },
   "inputs": {
-    "basement_floor_sf": 1400,
+ "basement_floor_sf": "",
     "length_ft": "",
     "width_ft": "",
     "perimeter_lf": "",
-    "ceiling_height_ft": 8
+    "ceiling_height_ft": ""
   },
   "rates": [
     { "name": "Framing (walls)", "unit": "WALL_SF", "material": 2.25, "labor": 3.0 },
