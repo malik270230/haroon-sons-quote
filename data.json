@@ -1,0 +1,204 @@
+{
+  "settings": {
+    "materials_markup": 0.25,
+    "labor_markup": 0.35
+  },
+  "rates": [
+    {
+      "item": "Framing (walls)",
+      "unit": "WALL_SF",
+      "mat_per_unit": 2.25,
+      "lab_per_unit": 3.0,
+      "notes": "Units = INPUT!B11"
+    },
+    {
+      "item": "Electrical (whole basement)",
+      "unit": "FLOOR_SF",
+      "mat_per_unit": 2.75,
+      "lab_per_unit": 4.75,
+      "notes": "Whole basement wiring. Units = INPUT!B9"
+    },
+    {
+      "item": "Subpanel 100A (add-on)",
+      "unit": "EACH",
+      "mat_per_unit": 650.0,
+      "lab_per_unit": 950.0,
+      "notes": "100A subpanel ~10 ft baseline"
+    },
+    {
+      "item": "Insulation (walls)",
+      "unit": "WALL_SF",
+      "mat_per_unit": 1.0,
+      "lab_per_unit": 1.25,
+      "notes": "Units = INPUT!B11"
+    },
+    {
+      "item": "Drywall Hang (walls+ceiling)",
+      "unit": "PAINT_SF",
+      "mat_per_unit": 1.6,
+      "lab_per_unit": 2.4,
+      "notes": "Units = INPUT!B12"
+    },
+    {
+      "item": "Drywall Finish/Taping (walls+ceiling)",
+      "unit": "PAINT_SF",
+      "mat_per_unit": 0.4,
+      "lab_per_unit": 1.95,
+      "notes": "Units = INPUT!B12"
+    },
+    {
+      "item": "Painting (walls+ceiling)",
+      "unit": "PAINT_SF",
+      "mat_per_unit": 1.05,
+      "lab_per_unit": 1.75,
+      "notes": "Primer + 2 coats. Units = INPUT!B12"
+    },
+    {
+      "item": "Flooring (entire floor)",
+      "unit": "FLOOR_SF",
+      "mat_per_unit": 4.25,
+      "lab_per_unit": 3.0,
+      "notes": "Default LVP supply+install cost"
+    },
+    {
+      "item": "Base Molding (LF)",
+      "unit": "LF",
+      "mat_per_unit": 1.4,
+      "lab_per_unit": 2.2,
+      "notes": "Units = INPUT!B13"
+    },
+    {
+      "item": "Plumbing: Toilet (each)",
+      "unit": "EACH",
+      "mat_per_unit": 320.0,
+      "lab_per_unit": 450.0,
+      "notes": "Supply + install"
+    },
+    {
+      "item": "Plumbing: Vanity + Faucet (each)",
+      "unit": "EACH",
+      "mat_per_unit": 750.0,
+      "lab_per_unit": 525.0,
+      "notes": "Supply + install"
+    },
+    {
+      "item": "Plumbing: Shower package (each)",
+      "unit": "EACH",
+      "mat_per_unit": 900.0,
+      "lab_per_unit": 950.0,
+      "notes": "Valve+trim+drain+connections"
+    },
+    {
+      "item": "Plumbing: Kitchen sink + faucet (each)",
+      "unit": "EACH",
+      "mat_per_unit": 600.0,
+      "lab_per_unit": 525.0,
+      "notes": "Supply + install"
+    },
+    {
+      "item": "Plumbing: Dishwasher (each)",
+      "unit": "EACH",
+      "mat_per_unit": 650.0,
+      "lab_per_unit": 350.0,
+      "notes": "Supply + install"
+    },
+    {
+      "item": "Plumbing: Ice maker line (each)",
+      "unit": "EACH",
+      "mat_per_unit": 120.0,
+      "lab_per_unit": 200.0,
+      "notes": "Supply + install"
+    },
+    {
+      "item": "Plumbing: Bar sink + faucet (each)",
+      "unit": "EACH",
+      "mat_per_unit": 450.0,
+      "lab_per_unit": 525.0,
+      "notes": "Supply + install"
+    },
+    {
+      "item": "Upflush / Ejector system (each)",
+      "unit": "EACH",
+      "mat_per_unit": 1500.0,
+      "lab_per_unit": 1350.0,
+      "notes": "Supply + install baseline"
+    },
+    {
+      "item": "Door: Interior Hollow Core (each)",
+      "unit": "EACH",
+      "mat_per_unit": 170.0,
+      "lab_per_unit": 225.0,
+      "notes": "Door + casing supply; hang + case labor"
+    },
+    {
+      "item": "Door: Interior Solid Core (each)",
+      "unit": "EACH",
+      "mat_per_unit": 280.0,
+      "lab_per_unit": 275.0,
+      "notes": "Door + casing supply; hang + case labor"
+    },
+    {
+      "item": "Door: Closet (each)",
+      "unit": "EACH",
+      "mat_per_unit": 200.0,
+      "lab_per_unit": 175.0,
+      "notes": "Supply + install"
+    },
+    {
+      "item": "Door Hardware Allowance (each)",
+      "unit": "EACH",
+      "mat_per_unit": 45.0,
+      "lab_per_unit": 0.0,
+      "notes": "Knob/lever + misc per door"
+    },
+    {
+      "item": "Door Casing (LF)",
+      "unit": "LF",
+      "mat_per_unit": 1.6,
+      "lab_per_unit": 2.4,
+      "notes": "Casing supply+install per LF (auto from doors)"
+    },
+    {
+      "item": "Shoe Molding (LF)",
+      "unit": "LF",
+      "mat_per_unit": 0.9,
+      "lab_per_unit": 1.6,
+      "notes": "Shoe / quarter round per LF"
+    },
+    {
+      "item": "Drywall Supplies (PAINT_SF)",
+      "unit": "PAINT_SF",
+      "mat_per_unit": 0.45,
+      "lab_per_unit": 0.15,
+      "notes": "Tape, mud, beads, screws per SF"
+    },
+    {
+      "item": "Paint Supplies (PAINT_SF)",
+      "unit": "PAINT_SF",
+      "mat_per_unit": 0.25,
+      "lab_per_unit": 0.05,
+      "notes": "Tape, plastic, rollers, caulk per SF"
+    },
+    {
+      "item": "Electrical Supplies (FLOOR_SF)",
+      "unit": "FLOOR_SF",
+      "mat_per_unit": 0.85,
+      "lab_per_unit": 0.1,
+      "notes": "Plates, staples, connectors per SF"
+    },
+    {
+      "item": "Plumbing Supplies Allowance (each fixture)",
+      "unit": "EACH",
+      "mat_per_unit": 160.0,
+      "lab_per_unit": 0.0,
+      "notes": "Stops, traps, fittings per fixture"
+    },
+    {
+      "item": "Job Consumables & Fasteners (% of raw materials)",
+      "unit": "PCT_MAT",
+      "mat_per_unit": 0.05,
+      "lab_per_unit": 0.0,
+      "notes": "5% of raw material subtotal (before markup)"
+    }
+  ]
+}
