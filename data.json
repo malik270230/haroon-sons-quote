@@ -1,16 +1,46 @@
 {
   "company": {
-    "name": "Haroon & Sons Consulting",
-    "phone": "(XXX) XXX-XXXX",
-    "email": "info@haroonsons.com"
+    "name": "Haroon & Sons Consulting LLC",
+    "tagline": "Fast estimate • Clear scope • Clean totals"
   },
   "rates": {
-    "handyman_per_sqft": 55,
-    "contractor_per_sqft": 75
+    "handyman_per_sqft": 75,
+    "contractor_per_sqft": 90
   },
-  "addons": {
-    "bathroom": 18000,
-    "kitchenette": 22000,
-    "office": 8500
-  }
+  "scopeToggles": [
+    { "key": "framing", "label": "Framing (walls)", "type": "flat", "amount": 12000, "defaultOn": true },
+    { "key": "electrical", "label": "Electrical (whole basement)", "type": "flat", "amount": 9000, "defaultOn": true },
+    { "key": "subpanel100a", "label": "Subpanel 100A (add-on)", "type": "flat", "amount": 4500, "defaultOn": false },
+    { "key": "insulation", "label": "Insulation (walls)", "type": "flat", "amount": 5500, "defaultOn": true },
+    { "key": "drywallhang", "label": "Drywall Hang (walls + ceiling)", "type": "flat", "amount": 12000, "defaultOn": true },
+    { "key": "taping", "label": "Drywall Finish / Taping (walls + ceiling)", "type": "flat", "amount": 9000, "defaultOn": true },
+    { "key": "painting", "label": "Painting (walls + ceiling)", "type": "flat", "amount": 6500, "defaultOn": true },
+    { "key": "flooring", "label": "Flooring (entire floor)", "type": "flat", "amount": 8500, "defaultOn": true },
+    { "key": "basemolding", "label": "Base Molding (auto LF)", "type": "flat", "amount": 2200, "defaultOn": true }
+  ],
+  "fixtures": [
+    { "key": "toilet", "label": "Bathroom: Toilet", "unit": "each", "price": 850 },
+    { "key": "vanity", "label": "Bathroom: Vanity + Faucet", "unit": "each", "price": 950 },
+    { "key": "shower", "label": "Bathroom: Shower package", "unit": "each", "price": 4200 },
+    { "key": "ksink", "label": "Kitchenette: Sink + Faucet", "unit": "each", "price": 850 },
+    { "key": "dishwasher", "label": "Kitchenette: Dishwasher", "unit": "each", "price": 900 },
+    { "key": "fridge", "label": "Kitchenette: Fridge ice-maker", "unit": "each", "price": 1600 },
+    { "key": "wetbar", "label": "Wet Bar: Bar sink + faucet", "unit": "each", "price": 850 },
+    { "key": "ejector", "label": "Upflush / Ejector Pump System", "unit": "each", "price": 4800 }
+  ],
+  "doors": [
+    { "key": "hollow", "label": "Interior Door — Hollow Core", "unit": "each", "price": 385 },
+    { "key": "solid", "label": "Interior Door — Solid Core", "unit": "each", "price": 575 },
+    { "key": "closet", "label": "Closet Door — Bifold/Slider", "unit": "each", "price": 325 }
+  ],
+  "addOnSupplies": [
+    { "key": "drywallsup", "label": "Drywall Supplies", "amount": 1400, "defaultOn": true },
+    { "key": "paintsup", "label": "Paint Supplies", "amount": 700, "defaultOn": true },
+    { "key": "electsup", "label": "Electrical Supplies", "amount": 1800, "defaultOn": true },
+    { "key": "plumballow", "label": "Plumbing Supplies Allowance", "amount": 2200, "defaultOn": true },
+    { "key": "doorhardware", "label": "Door Hardware Allowance", "amount": 650, "defaultOn": true },
+    { "key": "shoemolding", "label": "Shoe Molding", "amount": 500, "defaultOn": false },
+    { "key": "doorcasing", "label": "Door Casing", "amount": 950, "defaultOn": false },
+    { "key": "consumables", "label": "Job Consumables & Fasteners", "amount": 650, "defaultOn": true }
+  ]
 }
