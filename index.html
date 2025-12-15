@@ -4,57 +4,219 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Haroon & Sons Consulting Quote</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-
-  <header class="header">
-    <img class="logo" src="logo.png" alt="Haroon & Sons Consulting Logo">
-    <div>
-      <h1>Haroon & Sons Consulting Quote</h1>
-      <p class="muted">Fast estimate • Clear scope • Clean totals</p>
+  <header class="top">
+    <div class="brand">
+      <img class="logo" src="logo.png" alt="Logo" />
+      <div>
+        <div class="title">Haroon & Sons Consulting Quote</div>
+        <div class="subtitle">Fast estimate • Clear scope • Clean totals</div>
+      </div>
     </div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="input">INPUT</button>
+      <button class="tab" data-tab="rates">RATES</button>
+      <button class="tab" data-tab="quote">QUOTE</button>
+      <button class="tab" data-tab="settings">SETTINGS</button>
+    </nav>
   </header>
 
-  <main class="card">
-    <div class="grid small">
-      <label class="field">
-        <span>Square Footage</span>
-        <input id="sqft" type="number" inputmode="numeric" placeholder="e.g., 1400">
-      </label>
+  <main class="wrap">
+    <!-- INPUT -->
+    <section class="panel active" id="tab-input">
+      <div class="card">
+        <h2>Project Geometry (Auto Calcs)</h2>
 
-      <label class="field">
-        <span>Service Type</span>
-        <select id="service">
-          <option value="handyman">Handyman</option>
-          <option value="contractor">Contractor</option>
-        </select>
-      </label>
-    </div>
+        <div class="grid2">
+          <label class="field">
+            <span>Basement Floor SF</span>
+            <input id="in_floor_sf" type="number" inputmode="numeric" />
+          </label>
 
-    <section class="section">
-      <h2>Scope Toggles</h2>
-      <div id="scopeList" class="list"></div>
+          <label class="field">
+            <span>Ceiling Height (ft)</span>
+            <input id="in_ceiling_ht" type="number" inputmode="decimal" />
+          </label>
+
+          <label class="field">
+            <span>Basement Length (ft) (optional)</span>
+            <input id="in_len" type="number" inputmode="decimal" />
+          </label>
+
+          <label class="field">
+            <span>Basement Width (ft) (optional)</span>
+            <input id="in_wid" type="number" inputmode="decimal" />
+          </label>
+
+          <label class="field">
+            <span>Perimeter (LF) (enter if not using L×W)</span>
+            <input id="in_perim" type="number" inputmode="decimal" />
+          </label>
+        </div>
+
+        <div class="card soft">
+          <div class="kpiGrid">
+            <div class="kpi">
+              <div class="k">Floor SF (auto if L×W)</div>
+              <div class="v" id="k_floor_sf">—</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Perimeter LF (auto)</div>
+              <div class="v" id="k_perim">—</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Wall SF (Perimeter×Height)</div>
+              <div class="v" id="k_wall_sf">—</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Paint/Drywall SF (Walls+Ceiling)</div>
+              <div class="v" id="k_paint_sf">—</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Base Molding LF (auto = perimeter)</div>
+              <div class="v" id="k_base_lf">—</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Total Doors (interior+solid+closet)</div>
+              <div class="v" id="k_doors_total">—</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Door Casing LF (doors×14)</div>
+              <div class="v" id="k_casing_lf">—</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Shoe Molding LF (auto = base LF)</div>
+              <div class="v" id="k_shoe_lf">—</div>
+            </div>
+          </div>
+        </div>
+
+        <h2>Scope Toggles (Yes/No)</h2>
+        <div id="scopeList" class="list"></div>
+
+        <h2>Plumbing (Fixture Counts — supply + install)</h2>
+        <div id="fixtureList" class="list"></div>
+
+        <h2>Doors (Quantity — casing included per door)</h2>
+        <div id="doorList" class="list"></div>
+
+        <h2>Add-on Supply Lines (recommended)</h2>
+        <div id="addOnList" class="list"></div>
+
+        <div class="actions">
+          <button id="btn_calc" class="btn primary">Calculate Quote</button>
+          <button id="btn_to_quote" class="btn">Go to QUOTE</button>
+        </div>
+      </div>
     </section>
 
-    <section class="section">
-      <h2>Plumbing Fixtures (qty)</h2>
-      <div id="fixtureList" class="list"></div>
+    <!-- RATES -->
+    <section class="panel" id="tab-rates">
+      <div class="card">
+        <h2>Rates (Editable)</h2>
+        <p class="muted">These are unit COSTS. Quote applies global markups from SETTINGS (materials + labor).</p>
+
+        <div class="tableWrap">
+          <table class="tbl" id="ratesTable">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="w90">Unit</th>
+                <th class="w140">Material / Unit</th>
+                <th class="w140">Labor / Unit</th>
+              </tr>
+            </thead>
+            <tbody id="ratesBody"></tbody>
+          </table>
+        </div>
+
+        <div class="actions">
+          <button id="btn_save_rates" class="btn primary">Save Rates</button>
+          <button id="btn_reset_rates" class="btn danger">Reset Rates to Spreadsheet Defaults</button>
+        </div>
+      </div>
     </section>
 
-    <section class="section">
-      <h2>Doors (qty)</h2>
-      <div id="doorList" class="list"></div>
+    <!-- QUOTE -->
+    <section class="panel" id="tab-quote">
+      <div class="card">
+        <h2>Quote Summary</h2>
+        <div class="mini" id="quoteMeta"></div>
+
+        <div class="tableWrap">
+          <table class="tbl" id="quoteTable">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="w90">Unit</th>
+                <th class="w90">Units</th>
+                <th class="w140">Material (w/markup)</th>
+                <th class="w140">Labor (w/markup)</th>
+                <th class="w140">Sell Price</th>
+              </tr>
+            </thead>
+            <tbody id="quoteBody"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5" class="right strong">TOTAL SELL PRICE</td>
+                <td class="strong" id="grandTotal">$0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="actions">
+          <button id="btn_print" class="btn">Print / Save PDF</button>
+        </div>
+      </div>
     </section>
 
-    <section class="section">
-      <h2>Add-on Supply Lines</h2>
-      <div id="supplyList" class="list"></div>
+    <!-- SETTINGS -->
+    <section class="panel" id="tab-settings">
+      <div class="card">
+        <h2>Settings</h2>
+
+        <div class="grid3">
+          <label class="field">
+            <span>Materials Markup</span>
+            <input id="set_mat_mu" type="number" inputmode="decimal" step="0.01" />
+          </label>
+          <label class="field">
+            <span>Labor Markup</span>
+            <input id="set_lab_mu" type="number" inputmode="decimal" step="0.01" />
+          </label>
+          <label class="field">
+            <span>Labor Base Rate ($/hr)</span>
+            <input id="set_lab_hr" type="number" inputmode="decimal" step="1" />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="btn_save_settings" class="btn primary">Save Settings</button>
+          <button id="btn_reset_all" class="btn danger">Reset EVERYTHING to Spreadsheet Defaults</button>
+        </div>
+
+        <h2>Export / Import</h2>
+        <p class="muted">This saves/loads your rates + settings + last inputs on this phone.</p>
+        <div class="actions">
+          <button id="btn_export" class="btn">Export JSON</button>
+          <button id="btn_import" class="btn">Import JSON</button>
+        </div>
+
+        <textarea id="jsonBox" class="jsonBox" placeholder="Export will appear here. Paste JSON here to import."></textarea>
+
+        <h2>Notes</h2>
+        <ul class="muted">
+          <li>Electrical is priced once for the whole basement (based on Floor SF).</li>
+          <li>Plumbing is fixture-based only.</li>
+          <li>Subpanel is a separate add-on toggle.</li>
+          <li>Door casing LF is auto from door quantity (doors × 14 LF). Shoe molding LF is auto from base LF.</li>
+        </ul>
+      </div>
     </section>
-
-    <button id="calculate" class="btn">Calculate Quote</button>
-
-    <div id="output" class="output"></div>
   </main>
 
   <script src="app.js"></script>
