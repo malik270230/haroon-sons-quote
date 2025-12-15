@@ -1,170 +1,79 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Haroon and Sons Consulting Quote</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-  <header class="topbar">
+
+<header class="site-header">
+  <div class="header-inner">
     <div class="brand">
-      <div class="logoWrap">
-        <img src="logo.png" alt="Haroon and Sons Consulting LLC">
-      </div>
-
-      <div class="brandText">
-        <div class="title">Haroon and Sons Consulting Quote</div>
-        <div class="subtitle">Vision • Alignment • Execution</div>
+      <img src="logo.png" alt="Haroon and Sons Consulting LLC" />
+      <div class="brand-text">
+        <h1>Haroon and Sons Consulting Quote</h1>
+        <p>Vision • Alignment • Execution</p>
       </div>
     </div>
 
-    <div class="top-actions">
-      <button id="btnReset" class="btn ghost" type="button">Reset</button>
-      <button id="btnShare" class="btn" type="button">Copy Summary</button>
-      <button id="btnCSV" class="btn" type="button">Download CSV</button>
+    <div class="header-actions">
+      <button>Reset</button>
+      <button>Copy Summary</button>
+      <button>Download CSV</button>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main class="wrap">
-    <section class="card">
-      <h2>Geometry</h2>
-      <div class="grid">
-        <label>Basement Floor SF
-          <input id="floorSf" type="number" min="0" step="0.01" value="1400" />
-        </label>
-        <label>Length (ft) (optional)
-          <input id="lenFt" type="number" min="0" step="0.01" placeholder="Leave blank to use SF" />
-        </label>
-        <label>Width (ft) (optional)
-          <input id="widFt" type="number" min="0" step="0.01" placeholder="Leave blank to use SF" />
-        </label>
-        <label>Perimeter (LF) (optional)
-          <input id="perLf" type="number" min="0" step="0.01" placeholder="Leave blank for auto" />
-        </label>
-        <label>Ceiling Height (ft)
-          <input id="ceilHt" type="number" min="0" step="0.01" value="8" />
-        </label>
+<main class="container">
 
-        <div class="kpi">
-          <div class="kpiRow"><span>Floor SF</span><strong id="kFloor">—</strong></div>
-          <div class="kpiRow"><span>Perimeter LF</span><strong id="kPer">—</strong></div>
-          <div class="kpiRow"><span>Wall SF</span><strong id="kWall">—</strong></div>
-          <div class="kpiRow"><span>Paint/Drywall SF</span><strong id="kPaint">—</strong></div>
-          <div class="kpiRow"><span>Base LF</span><strong id="kBase">—</strong></div>
-        </div>
-      </div>
-    </section>
+  <section class="card">
+    <h2>Geometry</h2>
 
-    <section class="card">
-      <h2>Markups</h2>
-      <div class="grid small">
-        <label>Materials Markup
-          <input id="matMu" type="number" min="0" step="0.01" value="0.25" />
-        </label>
-        <label>Labor Markup
-          <input id="labMu" type="number" min="0" step="0.01" value="0.35" />
-        </label>
-      </div>
-      <p class="hint">Tip: use <strong>0.25</strong> and <strong>0.35</strong> to match your spreadsheet defaults.</p>
-    </section>
+    <label>Basement Floor SF
+      <input type="number" value="1400" />
+    </label>
 
-    <section class="card">
-      <h2>Scope Toggles</h2>
-      <div class="grid toggles">
-        <label class="toggle"><input id="tFraming" type="checkbox" checked /> Framing</label>
-        <label class="toggle"><input id="tElectrical" type="checkbox" checked /> Electrical</label>
-        <label class="toggle"><input id="tSubpanel" type="checkbox" checked /> Subpanel (100A add-on)</label>
-        <label class="toggle"><input id="tInsulation" type="checkbox" checked /> Insulation</label>
-        <label class="toggle"><input id="tDryHang" type="checkbox" checked /> Drywall Hang</label>
-        <label class="toggle"><input id="tDryFinish" type="checkbox" checked /> Drywall Finish/Tape</label>
-        <label class="toggle"><input id="tPaint" type="checkbox" checked /> Painting</label>
-        <label class="toggle"><input id="tFloor" type="checkbox" checked /> Flooring</label>
-        <label class="toggle"><input id="tBase" type="checkbox" checked /> Base Molding</label>
-      </div>
-    </section>
+    <label>Length (ft)
+      <input type="number" placeholder="Leave blank to use SF" />
+    </label>
 
-    <section class="card">
-      <h2>Plumbing Fixture Counts</h2>
-      <div class="grid small">
-        <label>Toilet <input id="pToilet" type="number" min="0" step="1" value="1" /></label>
-        <label>Vanity + Faucet <input id="pVanity" type="number" min="0" step="1" value="1" /></label>
-        <label>Shower package <input id="pShower" type="number" min="0" step="1" value="1" /></label>
-        <label>Kitchen sink + faucet <input id="pKitchen" type="number" min="0" step="1" value="1" /></label>
-        <label>Dishwasher <input id="pDish" type="number" min="0" step="1" value="1" /></label>
-        <label>Ice maker line <input id="pIce" type="number" min="0" step="1" value="0" /></label>
-        <label>Bar sink + faucet <input id="pBar" type="number" min="0" step="1" value="0" /></label>
-        <label>Upflush / Ejector system <input id="pUpflush" type="number" min="0" step="1" value="1" /></label>
-      </div>
-      <div class="grid toggles">
-        <label class="toggle"><input id="tPlumbSup" type="checkbox" checked /> Plumbing Supplies Allowance</label>
-      </div>
-    </section>
+    <label>Width (ft)
+      <input type="number" placeholder="Leave blank to use SF" />
+    </label>
 
-    <section class="card">
-      <h2>Doors</h2>
-      <div class="grid small">
-        <label>Interior Hollow Core <input id="dHollow" type="number" min="0" step="1" value="9" /></label>
-        <label>Interior Solid Core <input id="dSolid" type="number" min="0" step="1" value="1" /></label>
-        <label>Closet Doors <input id="dCloset" type="number" min="0" step="1" value="6" /></label>
+    <label>Perimeter (LF)
+      <input type="number" placeholder="Leave blank for auto" />
+    </label>
 
-        <div class="kpi">
-          <div class="kpiRow"><span>Total Doors</span><strong id="kDoors">—</strong></div>
-          <div class="kpiRow"><span>Door Casing LF</span><strong id="kCasing">—</strong></div>
-          <div class="kpiRow"><span>Shoe Molding LF</span><strong id="kShoe">—</strong></div>
-        </div>
-      </div>
+    <label>Ceiling Height (ft)
+      <input type="number" value="8" />
+    </label>
 
-      <div class="grid toggles">
-        <label class="toggle"><input id="tDoorHardware" type="checkbox" checked /> Door Hardware Allowance</label>
-        <label class="toggle"><input id="tDoorCasing" type="checkbox" checked /> Door Casing</label>
-        <label class="toggle"><input id="tShoe" type="checkbox" checked /> Shoe Molding</label>
-      </div>
-    </section>
+    <div class="summary-box">
+      <div><span>Floor SF</span><strong>1,400</strong></div>
+      <div><span>Perimeter LF</span><strong>149.67</strong></div>
+      <div><span>Wall SF</span><strong>1,197.33</strong></div>
+      <div><span>Paint/Drywall SF</span><strong>2,597.33</strong></div>
+      <div><span>Base LF</span><strong>149.67</strong></div>
+    </div>
+  </section>
 
-    <section class="card">
-      <h2>Supply Add-ons</h2>
-      <div class="grid toggles">
-        <label class="toggle"><input id="tDrySup" type="checkbox" checked /> Drywall Supplies</label>
-        <label class="toggle"><input id="tPaintSup" type="checkbox" checked /> Paint Supplies</label>
-        <label class="toggle"><input id="tElecSup" type="checkbox" checked /> Electrical Supplies</label>
-        <label class="toggle"><input id="tConsumables" type="checkbox" checked /> Job Consumables & Fasteners (5% of raw materials)</label>
-      </div>
-    </section>
+  <section class="card">
+    <h2>Markups</h2>
 
-    <section class="card">
-      <h2>Quote Summary</h2>
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th class="right">Units</th>
-              <th>Unit Type</th>
-              <th class="right">Material</th>
-              <th class="right">Labor</th>
-              <th class="right">Sell</th>
-            </tr>
-          </thead>
-          <tbody id="quoteBody"></tbody>
-          <tfoot>
-            <tr>
-              <td colspan="3" class="right"><strong>Totals</strong></td>
-              <td class="right"><strong id="totMat">—</strong></td>
-              <td class="right"><strong id="totLab">—</strong></td>
-              <td class="right"><strong id="totSell">—</strong></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <p class="hint">Everything recalculates instantly.</p>
-    </section>
+    <label>Materials Markup
+      <input type="number" value="0.25" />
+    </label>
 
-    <footer class="footer">
-      <div>Static GitHub Pages app • works on iPhone • no backend • your data stays in your browser.</div>
-    </footer>
-  </main>
+    <label>Labor Markup
+      <input type="number" value="0.35" />
+    </label>
+  </section>
 
-  <script src="app.js"></script>
+</main>
+
 </body>
 </html>
