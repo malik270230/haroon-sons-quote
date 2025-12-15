@@ -1,1 +1,16 @@
-
+{
+  "company": {
+    "name": "Haroon & Sons Consulting",
+    "phone": "(XXX) XXX-XXXX",
+    "email": "info@haroonsons.com"
+  },
+  "rates": {
+    "handyman_per_sqft": 55,
+    "contractor_per_sqft": 75
+  },
+  "addons": {
+    "bathroom": 18000,
+    "kitchenette": 22000,
+    "office": 8500
+  }
+}
