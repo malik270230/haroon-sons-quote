@@ -1,54 +1,52 @@
 {
   "company": {
     "name": "Haroon & Sons Consulting",
-    "subtitle": "Fast estimate • Clear scope • Clean totals"
+    "tagline": "Fast estimate • Clear scope • Clean totals",
+    "phone": "848-228-2528",
+    "email": "Malik270230@gmail.com"
   },
   "defaults": {
-    "inputs": {
-      "basement_floor_sf": "",
-      "basement_length_ft": "",
-      "basement_width_ft": "",
-      "perimeter_lf_override": "",
-      "ceiling_height_ft": 8,
-      "customer_name": "",
-      "project_address": "",
-      "notes": ""
-    },
-    "settings": {
-      "materials_markup_pct": 25,
-      "labor_markup_pct": 35,
-      "show_internal_details": false
-    }
+    "serviceType": "Contractor",
+    "ceilingHeightFt": 8,
+    "materialsMarkup": 0.25,
+    "laborMarkup": 0.35
   },
-  "items": [
-    { "id": "framing_walls", "group": "scope", "label": "Framing (walls)", "unit": "WALL_SF", "enabled": true, "qty": "", "material": 2.25, "labor": 3.75 },
-    { "id": "electrical_whole", "group": "scope", "label": "Electrical (whole basement)", "unit": "FLOOR_SF", "enabled": true, "qty": "", "material": 2.75, "labor": 6.25 },
-    { "id": "subpanel_100a", "group": "scope", "label": "Subpanel 100A (add-on)", "unit": "EACH", "enabled": false, "qty": 1, "material": 650, "labor": 950 },
-    { "id": "insulation_walls", "group": "scope", "label": "Insulation (walls)", "unit": "WALL_SF", "enabled": true, "qty": "", "material": 1.00, "labor": 1.60 },
-    { "id": "drywall_hang", "group": "scope", "label": "Drywall Hang (walls + ceiling)", "unit": "PAINT_SF", "enabled": true, "qty": "", "material": 1.60, "labor": 3.10 },
-    { "id": "drywall_finish", "group": "scope", "label": "Drywall Finish / Taping (walls + ceiling)", "unit": "PAINT_SF", "enabled": true, "qty": "", "material": 0.40, "labor": 2.40 },
-    { "id": "painting", "group": "scope", "label": "Painting (walls + ceiling)", "unit": "PAINT_SF", "enabled": true, "qty": "", "material": 1.05, "labor": 1.85 },
-    { "id": "flooring", "group": "scope", "label": "Flooring (entire floor)", "unit": "FLOOR_SF", "enabled": true, "qty": "", "material": 5.25, "labor": 3.00 },
-    { "id": "base_molding", "group": "scope", "label": "Base Molding (auto LF)", "unit": "PERIM_LF", "enabled": true, "qty": "", "material": 1.40, "labor": 1.60 },
-
-    { "id": "pl_toilet", "group": "fixtures", "label": "Plumbing: Toilet", "unit": "EACH", "enabled": true, "qty": 1, "material": 320, "labor": 450 },
-    { "id": "pl_vanity", "group": "fixtures", "label": "Plumbing: Vanity + Faucet", "unit": "EACH", "enabled": true, "qty": 1, "material": 750, "labor": 525 },
-    { "id": "pl_shower", "group": "fixtures", "label": "Plumbing: Shower package", "unit": "EACH", "enabled": true, "qty": 1, "material": 900, "labor": 950 },
-    { "id": "pl_sink_faucet", "group": "fixtures", "label": "Plumbing: Kitchen sink + faucet", "unit": "EACH", "enabled": true, "qty": 1, "material": 600, "labor": 525 },
-    { "id": "pl_dishwasher", "group": "fixtures", "label": "Plumbing: Dishwasher", "unit": "EACH", "enabled": true, "qty": 1, "material": 650, "labor": 350 },
-    { "id": "pl_icemaker", "group": "fixtures", "label": "Plumbing: Ice maker line", "unit": "EACH", "enabled": false, "qty": 0, "material": 120, "labor": 200 },
-    { "id": "pl_barsink", "group": "fixtures", "label": "Plumbing: Bar sink + faucet", "unit": "EACH", "enabled": false, "qty": 0, "material": 450, "labor": 525 },
-    { "id": "pl_upflush", "group": "fixtures", "label": "Upflush / Ejector system", "unit": "EACH", "enabled": false, "qty": 0, "material": 1500, "labor": 1350 },
-
-    { "id": "door_hollow", "group": "doors", "label": "Door: Interior Hollow Core", "unit": "EACH", "enabled": true, "qty": 0, "material": 285, "labor": 225 },
-    { "id": "door_solid", "group": "doors", "label": "Door: Interior Solid Core", "unit": "EACH", "enabled": true, "qty": 0, "material": 475, "labor": 275 },
-    { "id": "door_closet", "group": "doors", "label": "Door: Closet (bifold/slider)", "unit": "EACH", "enabled": true, "qty": 0, "material": 200, "labor": 175 },
-
-    { "id": "drywall_supplies", "group": "addons", "label": "Drywall Supplies", "unit": "PAINT_SF", "enabled": true, "qty": "", "material": 0.45, "labor": 0.15 },
-    { "id": "paint_supplies", "group": "addons", "label": "Paint Supplies", "unit": "PAINT_SF", "enabled": true, "qty": "", "material": 0.15, "labor": 0.05 },
-    { "id": "electrical_supplies", "group": "addons", "label": "Electrical Supplies", "unit": "FLOOR_SF", "enabled": true, "qty": "", "material": 0.85, "labor": 0.10 },
-    { "id": "plumbing_allowance", "group": "addons", "label": "Plumbing Supplies Allowance", "unit": "EACH", "enabled": true, "qty": 1, "material": 2200, "labor": 0 },
-    { "id": "door_hardware", "group": "addons", "label": "Door Hardware Allowance", "unit": "EACH", "enabled": true, "qty": 1, "material": 650, "labor": 0 },
-    { "id": "job_consumables", "group": "addons", "label": "Job Consumables & Fasteners (% of raw materials)", "unit": "PCT_MAT", "enabled": true, "qty": 5, "material": 0, "labor": 0 }
+  "sqftRates": {
+    "Handyman": 75,
+    "Contractor": 55
+  },
+  "scopeItems": [
+    { "key": "framing", "label": "Framing (walls)", "unit": "WALL_SF", "matRate": 2.10, "labRate": 3.20, "defaultOn": true },
+    { "key": "electrical", "label": "Electrical (whole project)", "unit": "FLOOR_SF", "matRate": 2.50, "labRate": 3.90, "defaultOn": true },
+    { "key": "subpanel", "label": "Subpanel 100A (add-on)", "unit": "EACH", "matRate": 650, "labRate": 300, "defaultOn": false },
+    { "key": "insulation", "label": "Insulation (walls)", "unit": "WALL_SF", "matRate": 0.85, "labRate": 0.90, "defaultOn": true },
+    { "key": "drywallHang", "label": "Drywall Hang (walls + ceiling)", "unit": "PAINT_SF", "matRate": 2.00, "labRate": 3.00, "defaultOn": true },
+    { "key": "drywallFinish", "label": "Drywall Finish / Taping (walls + ceiling)", "unit": "PAINT_SF", "matRate": 0.50, "labRate": 2.10, "defaultOn": true },
+    { "key": "painting", "label": "Painting (walls + ceiling)", "unit": "PAINT_SF", "matRate": 1.30, "labRate": 2.35, "defaultOn": true },
+    { "key": "flooring", "label": "Flooring (entire floor)", "unit": "FLOOR_SF", "matRate": 3.75, "labRate": 1.75, "defaultOn": true },
+    { "key": "baseMolding", "label": "Base Molding (LF)", "unit": "LF", "matRate": 1.00, "labRate": 1.50, "defaultOn": true }
+  ],
+  "fixtures": [
+    { "key": "toilet", "label": "Plumbing: Toilet (each)", "unit": "EACH", "matRate": 400, "labRate": 370 },
+    { "key": "vanity", "label": "Plumbing: Vanity + Faucet (each)", "unit": "EACH", "matRate": 525, "labRate": 750 },
+    { "key": "shower", "label": "Plumbing: Shower package (each)", "unit": "EACH", "matRate": 1350, "labRate": 500 },
+    { "key": "kitchenSink", "label": "Plumbing: Kitchen sink + faucet (each)", "unit": "EACH", "matRate": 525, "labRate": 600 },
+    { "key": "dishwasher", "label": "Plumbing: Dishwasher (each)", "unit": "EACH", "matRate": 350, "labRate": 650 },
+    { "key": "iceLine", "label": "Plumbing: Ice maker line (each)", "unit": "EACH", "matRate": 200, "labRate": 120 },
+    { "key": "barSink", "label": "Plumbing: Bar sink + faucet (each)", "unit": "EACH", "matRate": 525, "labRate": 450 },
+    { "key": "upflush", "label": "Upflush / Ejector system (each)", "unit": "EACH", "matRate": 1350, "labRate": 1500 }
+  ],
+  "doors": [
+    { "key": "doorHollow", "label": "Door: Interior Hollow Core (each)", "unit": "EACH", "matRate": 225, "labRate": 285 },
+    { "key": "doorSolid", "label": "Door: Interior Solid Core (each)", "unit": "EACH", "matRate": 275, "labRate": 475 },
+    { "key": "doorCloset", "label": "Door: Closet (each)", "unit": "EACH", "matRate": 175, "labRate": 200 }
+  ],
+  "addons": [
+    { "key": "drywallSupplies", "label": "Drywall Supplies (PAINT_SF)", "unit": "PAINT_SF", "matRate": 0.45, "labRate": 0.00, "defaultOn": true },
+    { "key": "paintSupplies", "label": "Paint Supplies (PAINT_SF)", "unit": "PAINT_SF", "matRate": 0.15, "labRate": 0.00, "defaultOn": true },
+    { "key": "electricalSupplies", "label": "Electrical Supplies (FLOOR_SF)", "unit": "FLOOR_SF", "matRate": 0.75, "labRate": 0.00, "defaultOn": true },
+    { "key": "plumbingAllowance", "label": "Plumbing Supplies Allowance (each)", "unit": "EACH", "matRate": 950, "labRate": 0.00, "defaultOn": true },
+    { "key": "doorHardware", "label": "Door Hardware Allowance (each)", "unit": "EACH", "matRate": 225, "labRate": 0.00, "defaultOn": true },
+    { "key": "consumablesPct", "label": "Job Consumables & Fasteners (% of raw materials)", "unit": "PCT_MAT", "matRate": 0.05, "labRate": 0.00, "defaultOn": true }
   ]
 }
