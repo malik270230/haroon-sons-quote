@@ -6,26 +6,25 @@
   <title>Haroon and Sons Consulting Quote</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logoWrap">
+        <img src="logo.png" alt="Haroon and Sons Consulting LLC">
+      </div>
 
-<header class="topbar">
-  <div class="brand">
-    <div class="logoWrap">
-      <img src="logo.png" alt="Haroon and Sons Consulting LLC">
+      <div class="brandText">
+        <div class="title">Haroon and Sons Consulting Quote</div>
+        <div class="subtitle">Vision • Alignment • Execution</div>
+      </div>
     </div>
-    <div class="brandText">
-      <div class="title">Haroon and Sons Consulting Quote</div>
-      <div class="subtitle">Vision • Alignment • Execution</div>
-    </div>
-  </div>
 
-  <div class="top-actions">
-    <button id="btnReset" class="btn ghost">Reset</button>
-    <button id="btnShare" class="btn">Copy Summary</button>
-    <button id="btnCSV" class="btn">Download CSV</button>
-  </div>
-</header>
+    <div class="top-actions">
+      <button id="btnReset" class="btn ghost" type="button">Reset</button>
+      <button id="btnShare" class="btn" type="button">Copy Summary</button>
+      <button id="btnCSV" class="btn" type="button">Download CSV</button>
+    </div>
+  </header>
 
   <main class="wrap">
     <section class="card">
@@ -34,19 +33,15 @@
         <label>Basement Floor SF
           <input id="floorSf" type="number" min="0" step="0.01" value="1400" />
         </label>
-
         <label>Length (ft) (optional)
           <input id="lenFt" type="number" min="0" step="0.01" placeholder="Leave blank to use SF" />
         </label>
-
         <label>Width (ft) (optional)
           <input id="widFt" type="number" min="0" step="0.01" placeholder="Leave blank to use SF" />
         </label>
-
         <label>Perimeter (LF) (optional)
           <input id="perLf" type="number" min="0" step="0.01" placeholder="Leave blank for auto" />
         </label>
-
         <label>Ceiling Height (ft)
           <input id="ceilHt" type="number" min="0" step="0.01" value="8" />
         </label>
@@ -67,7 +62,6 @@
         <label>Materials Markup
           <input id="matMu" type="number" min="0" step="0.01" value="0.25" />
         </label>
-
         <label>Labor Markup
           <input id="labMu" type="number" min="0" step="0.01" value="0.35" />
         </label>
@@ -93,32 +87,15 @@
     <section class="card">
       <h2>Plumbing Fixture Counts</h2>
       <div class="grid small">
-        <label>Toilet
-          <input id="pToilet" type="number" min="0" step="1" value="1" />
-        </label>
-        <label>Vanity + Faucet
-          <input id="pVanity" type="number" min="0" step="1" value="1" />
-        </label>
-        <label>Shower package
-          <input id="pShower" type="number" min="0" step="1" value="1" />
-        </label>
-        <label>Kitchen sink + faucet
-          <input id="pKitchen" type="number" min="0" step="1" value="1" />
-        </label>
-        <label>Dishwasher
-          <input id="pDish" type="number" min="0" step="1" value="1" />
-        </label>
-        <label>Ice maker line
-          <input id="pIce" type="number" min="0" step="1" value="0" />
-        </label>
-        <label>Bar sink + faucet
-          <input id="pBar" type="number" min="0" step="1" value="0" />
-        </label>
-        <label>Upflush / Ejector system
-          <input id="pUpflush" type="number" min="0" step="1" value="1" />
-        </label>
+        <label>Toilet <input id="pToilet" type="number" min="0" step="1" value="1" /></label>
+        <label>Vanity + Faucet <input id="pVanity" type="number" min="0" step="1" value="1" /></label>
+        <label>Shower package <input id="pShower" type="number" min="0" step="1" value="1" /></label>
+        <label>Kitchen sink + faucet <input id="pKitchen" type="number" min="0" step="1" value="1" /></label>
+        <label>Dishwasher <input id="pDish" type="number" min="0" step="1" value="1" /></label>
+        <label>Ice maker line <input id="pIce" type="number" min="0" step="1" value="0" /></label>
+        <label>Bar sink + faucet <input id="pBar" type="number" min="0" step="1" value="0" /></label>
+        <label>Upflush / Ejector system <input id="pUpflush" type="number" min="0" step="1" value="1" /></label>
       </div>
-
       <div class="grid toggles">
         <label class="toggle"><input id="tPlumbSup" type="checkbox" checked /> Plumbing Supplies Allowance</label>
       </div>
@@ -127,15 +104,9 @@
     <section class="card">
       <h2>Doors</h2>
       <div class="grid small">
-        <label>Interior Hollow Core
-          <input id="dHollow" type="number" min="0" step="1" value="9" />
-        </label>
-        <label>Interior Solid Core
-          <input id="dSolid" type="number" min="0" step="1" value="1" />
-        </label>
-        <label>Closet Doors
-          <input id="dCloset" type="number" min="0" step="1" value="6" />
-        </label>
+        <label>Interior Hollow Core <input id="dHollow" type="number" min="0" step="1" value="9" /></label>
+        <label>Interior Solid Core <input id="dSolid" type="number" min="0" step="1" value="1" /></label>
+        <label>Closet Doors <input id="dCloset" type="number" min="0" step="1" value="6" /></label>
 
         <div class="kpi">
           <div class="kpiRow"><span>Total Doors</span><strong id="kDoors">—</strong></div>
@@ -157,7 +128,7 @@
         <label class="toggle"><input id="tDrySup" type="checkbox" checked /> Drywall Supplies</label>
         <label class="toggle"><input id="tPaintSup" type="checkbox" checked /> Paint Supplies</label>
         <label class="toggle"><input id="tElecSup" type="checkbox" checked /> Electrical Supplies</label>
-        <label class="toggle"><input id="tConsumables" type="checkbox" checked /> Job Consumables &amp; Fasteners (5% of raw materials)</label>
+        <label class="toggle"><input id="tConsumables" type="checkbox" checked /> Job Consumables & Fasteners (5% of raw materials)</label>
       </div>
     </section>
 
@@ -186,7 +157,7 @@
           </tfoot>
         </table>
       </div>
-      <p class="hint">Everything recalculates instantly. If it doesn’t, it’s a bug—tell me and I’ll tighten it up.</p>
+      <p class="hint">Everything recalculates instantly.</p>
     </section>
 
     <footer class="footer">
