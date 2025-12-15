@@ -1,46 +1,48 @@
 {
-  "company": {
-    "name": "Haroon & Sons Consulting LLC",
-    "tagline": "Fast estimate • Clear scope • Clean totals"
+  "settings": {
+    "materials_markup": 0.25,
+    "labor_markup": 0.35,
+    "labor_base_rate": 75
   },
-  "rates": {
-    "handyman_per_sqft": 75,
-    "contractor_per_sqft": 90
+  "inputs": {
+    "basement_floor_sf": 1400,
+    "length_ft": "",
+    "width_ft": "",
+    "perimeter_lf": "",
+    "ceiling_height_ft": 8
   },
-  "scopeToggles": [
-    { "key": "framing", "label": "Framing (walls)", "type": "flat", "amount": 12000, "defaultOn": true },
-    { "key": "electrical", "label": "Electrical (whole basement)", "type": "flat", "amount": 9000, "defaultOn": true },
-    { "key": "subpanel100a", "label": "Subpanel 100A (add-on)", "type": "flat", "amount": 4500, "defaultOn": false },
-    { "key": "insulation", "label": "Insulation (walls)", "type": "flat", "amount": 5500, "defaultOn": true },
-    { "key": "drywallhang", "label": "Drywall Hang (walls + ceiling)", "type": "flat", "amount": 12000, "defaultOn": true },
-    { "key": "taping", "label": "Drywall Finish / Taping (walls + ceiling)", "type": "flat", "amount": 9000, "defaultOn": true },
-    { "key": "painting", "label": "Painting (walls + ceiling)", "type": "flat", "amount": 6500, "defaultOn": true },
-    { "key": "flooring", "label": "Flooring (entire floor)", "type": "flat", "amount": 8500, "defaultOn": true },
-    { "key": "basemolding", "label": "Base Molding (auto LF)", "type": "flat", "amount": 2200, "defaultOn": true }
-  ],
-  "fixtures": [
-    { "key": "toilet", "label": "Bathroom: Toilet", "unit": "each", "price": 850 },
-    { "key": "vanity", "label": "Bathroom: Vanity + Faucet", "unit": "each", "price": 950 },
-    { "key": "shower", "label": "Bathroom: Shower package", "unit": "each", "price": 4200 },
-    { "key": "ksink", "label": "Kitchenette: Sink + Faucet", "unit": "each", "price": 850 },
-    { "key": "dishwasher", "label": "Kitchenette: Dishwasher", "unit": "each", "price": 900 },
-    { "key": "fridge", "label": "Kitchenette: Fridge ice-maker", "unit": "each", "price": 1600 },
-    { "key": "wetbar", "label": "Wet Bar: Bar sink + faucet", "unit": "each", "price": 850 },
-    { "key": "ejector", "label": "Upflush / Ejector Pump System", "unit": "each", "price": 4800 }
-  ],
-  "doors": [
-    { "key": "hollow", "label": "Interior Door — Hollow Core", "unit": "each", "price": 385 },
-    { "key": "solid", "label": "Interior Door — Solid Core", "unit": "each", "price": 575 },
-    { "key": "closet", "label": "Closet Door — Bifold/Slider", "unit": "each", "price": 325 }
-  ],
-  "addOnSupplies": [
-    { "key": "drywallsup", "label": "Drywall Supplies", "amount": 1400, "defaultOn": true },
-    { "key": "paintsup", "label": "Paint Supplies", "amount": 700, "defaultOn": true },
-    { "key": "electsup", "label": "Electrical Supplies", "amount": 1800, "defaultOn": true },
-    { "key": "plumballow", "label": "Plumbing Supplies Allowance", "amount": 2200, "defaultOn": true },
-    { "key": "doorhardware", "label": "Door Hardware Allowance", "amount": 650, "defaultOn": true },
-    { "key": "shoemolding", "label": "Shoe Molding", "amount": 500, "defaultOn": false },
-    { "key": "doorcasing", "label": "Door Casing", "amount": 950, "defaultOn": false },
-    { "key": "consumables", "label": "Job Consumables & Fasteners", "amount": 650, "defaultOn": true }
+  "rates": [
+    { "name": "Framing (walls)", "unit": "WALL_SF", "material": 2.25, "labor": 3.0 },
+    { "name": "Electrical (whole basement)", "unit": "FLOOR_SF", "material": 2.75, "labor": 4.75 },
+    { "name": "Subpanel 100A (add-on)", "unit": "EACH", "material": 650.0, "labor": 950.0 },
+    { "name": "Insulation (walls)", "unit": "WALL_SF", "material": 1.0, "labor": 1.25 },
+    { "name": "Drywall Hang (walls+ceiling)", "unit": "PAINT_SF", "material": 1.6, "labor": 2.4 },
+    { "name": "Drywall Finish/Taping (walls+ceiling)", "unit": "PAINT_SF", "material": 0.4, "labor": 1.95 },
+    { "name": "Painting (walls+ceiling)", "unit": "PAINT_SF", "material": 1.05, "labor": 1.75 },
+    { "name": "Flooring (entire floor)", "unit": "FLOOR_SF", "material": 4.25, "labor": 3.0 },
+    { "name": "Base Molding (LF)", "unit": "LF", "material": 1.4, "labor": 2.2 },
+
+    { "name": "Plumbing: Toilet (each)", "unit": "EACH", "material": 320, "labor": 450 },
+    { "name": "Plumbing: Vanity + Faucet (each)", "unit": "EACH", "material": 750, "labor": 525 },
+    { "name": "Plumbing: Shower package (each)", "unit": "EACH", "material": 900, "labor": 950 },
+    { "name": "Plumbing: Kitchen sink + faucet (each)", "unit": "EACH", "material": 600, "labor": 525 },
+    { "name": "Plumbing: Dishwasher (each)", "unit": "EACH", "material": 650, "labor": 350 },
+    { "name": "Plumbing: Ice maker line (each)", "unit": "EACH", "material": 120, "labor": 200 },
+    { "name": "Plumbing: Bar sink + faucet (each)", "unit": "EACH", "material": 450, "labor": 525 },
+    { "name": "Upflush / Ejector system (each)", "unit": "EACH", "material": 1500, "labor": 1350 },
+
+    { "name": "Door: Interior Hollow Core (each)", "unit": "EACH", "material": 285, "labor": 225 },
+    { "name": "Door: Interior Solid Core (each)", "unit": "EACH", "material": 475, "labor": 275 },
+    { "name": "Door: Closet (each)", "unit": "EACH", "material": 200, "labor": 175 },
+
+    { "name": "Drywall Supplies (PAINT_SF)", "unit": "PAINT_SF", "material": 0.45, "labor": 0.15 },
+    { "name": "Paint Supplies (PAINT_SF)", "unit": "PAINT_SF", "material": 0.15, "labor": 0.05 },
+    { "name": "Electrical Supplies (FLOOR_SF)", "unit": "FLOOR_SF", "material": 0.85, "labor": 0.1 },
+    { "name": "Plumbing Supplies Allowance (each fixture)", "unit": "EACH", "material": 160, "labor": 0 },
+    { "name": "Door Hardware Allowance (each)", "unit": "EACH", "material": 45, "labor": 0 },
+    { "name": "Door Casing (LF)", "unit": "LF", "material": 1.6, "labor": 2.4 },
+    { "name": "Shoe Molding (LF)", "unit": "LF", "material": 0.9, "labor": 1.6 },
+
+    { "name": "Job Consumables & Fasteners (% of raw materials)", "unit": "PCT_MAT", "material": 0, "labor": 0 }
   ]
 }
