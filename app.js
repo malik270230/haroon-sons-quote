@@ -449,7 +449,11 @@ function wireSettings(state) {
 function buildPrintHTML(state) {
   <div class="pTitle">${DATA.company.name}</div>
 <div class="pSub">Project Quote</div>
+<div class="pSub">
+  📞 848-228-2528 &nbsp;•&nbsp; ✉️ Malik270230@gmail.com
+</div>
 <div class="pSub">${meta}</div>
+  
   const q = computeQuote(state);
   const customer = (state.inputs.customer_name || "").trim();
   const address = (state.inputs.project_address || "").trim();
