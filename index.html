@@ -18,9 +18,9 @@
     </div>
 
     <div class="actions">
-      <button>Reset</button>
-      <button>Copy Summary</button>
-      <button>Download CSV</button>
+      <button id="btnReset" class="btn ghost" type="button">Reset</button>
+      <button id="btnShare" class="btn" type="button">Copy Summary</button>
+      <button id="btnCSV" class="btn" type="button">Download CSV</button>
     </div>
   </div>
 </header>
@@ -30,48 +30,90 @@
   <section class="card">
     <h2>Geometry</h2>
 
-    <label>Basement Floor SF
-      <input type="number" value="1400">
-    </label>
+    <div class="grid">
+      <label>Basement Floor SF
+        <input id="floorSf" type="number" min="0" step="0.01" value="1400" />
+      </label>
 
-    <label>Length (ft)
-      <input type="number" placeholder="Optional">
-    </label>
+      <label>Length (ft) (optional)
+        <input id="lenFt" type="number" min="0" step="0.01" placeholder="Leave blank to use SF" />
+      </label>
 
-    <label>Width (ft)
-      <input type="number" placeholder="Optional">
-    </label>
+      <label>Width (ft) (optional)
+        <input id="widFt" type="number" min="0" step="0.01" placeholder="Leave blank to use SF" />
+      </label>
 
-    <label>Perimeter (LF)
-      <input type="number" placeholder="Auto">
-    </label>
+      <label>Perimeter (LF) (optional)
+        <input id="perLf" type="number" min="0" step="0.01" placeholder="Leave blank for auto" />
+      </label>
 
-    <label>Ceiling Height (ft)
-      <input type="number" value="8">
-    </label>
+      <label>Ceiling Height (ft)
+        <input id="ceilHt" type="number" min="0" step="0.01" value="8" />
+      </label>
 
-    <div class="results">
-      <div><strong>Floor SF:</strong> 1,400</div>
-      <div><strong>Perimeter LF:</strong> 149.67</div>
-      <div><strong>Wall SF:</strong> 1,197.33</div>
-      <div><strong>Paint/Drywall SF:</strong> 2,597.33</div>
-      <div><strong>Base LF:</strong> 149.67</div>
+      <div class="kpi">
+        <div class="kpiRow"><span>Floor SF</span><strong id="kFloor">—</strong></div>
+        <div class="kpiRow"><span>Perimeter LF</span><strong id="kPer">—</strong></div>
+        <div class="kpiRow"><span>Wall SF</span><strong id="kWall">—</strong></div>
+        <div class="kpiRow"><span>Paint/Drywall SF</span><strong id="kPaint">—</strong></div>
+        <div class="kpiRow"><span>Base LF</span><strong id="kBase">—</strong></div>
+      </div>
     </div>
   </section>
 
   <section class="card">
     <h2>Markups</h2>
 
-    <label>Materials Markup
-      <input type="number" value="0.25">
-    </label>
+    <div class="grid small">
+      <label>Materials Markup
+        <input id="matMu" type="number" min="0" step="0.01" value="0.25" />
+      </label>
 
-    <label>Labor Markup
-      <input type="number" value="0.35">
-    </label>
+      <label>Labor Markup
+        <input id="labMu" type="number" min="0" step="0.01" value="0.35" />
+      </label>
+    </div>
+
+    <p class="hint">Markup example: 0.25 = +25% on materials, 0.35 = +35% on labor.</p>
   </section>
 
+  <section class="card">
+    <h2>Quote Summary</h2>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="right">Units</th>
+            <th>Unit Type</th>
+            <th class="right">Material</th>
+            <th class="right">Labor</th>
+            <th class="right">Sell</th>
+          </tr>
+        </thead>
+
+        <tbody id="quoteBody"></tbody>
+
+        <tfoot>
+          <tr>
+            <td colspan="3" class="right"><strong>Totals</strong></td>
+            <td class="right"><strong id="totMat">—</strong></td>
+            <td class="right"><strong id="totLab">—</strong></td>
+            <td class="right"><strong id="totSell">—</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <p class="hint">Everything recalculates instantly. Copy Summary gives a clean text recap for customers.</p>
+  </section>
+
+  <footer class="footer">
+    <div>Static GitHub Pages app • runs fully in your browser • no backend.</div>
+  </footer>
 </main>
 
+<script src="app.js"></script>
 </body>
 </html>
