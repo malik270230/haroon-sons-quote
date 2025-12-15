@@ -17,18 +17,40 @@
   </header>
 
   <main class="card">
-    <label class="field">
-      <span>Square Footage</span>
-      <input id="sqft" type="number" inputmode="numeric" placeholder="e.g., 1400" />
-    </label>
+    <div class="grid small">
+      <label class="field">
+        <span>Square Footage</span>
+        <input id="sqft" type="number" inputmode="numeric" placeholder="e.g., 1400">
+      </label>
 
-    <label class="field">
-      <span>Service Type</span>
-      <select id="service">
-        <option value="handyman">Handyman</option>
-        <option value="contractor">Contractor</option>
-      </select>
-    </label>
+      <label class="field">
+        <span>Service Type</span>
+        <select id="service">
+          <option value="handyman">Handyman</option>
+          <option value="contractor">Contractor</option>
+        </select>
+      </label>
+    </div>
+
+    <section class="section">
+      <h2>Scope Toggles</h2>
+      <div id="scopeList" class="list"></div>
+    </section>
+
+    <section class="section">
+      <h2>Plumbing Fixtures (qty)</h2>
+      <div id="fixtureList" class="list"></div>
+    </section>
+
+    <section class="section">
+      <h2>Doors (qty)</h2>
+      <div id="doorList" class="list"></div>
+    </section>
+
+    <section class="section">
+      <h2>Add-on Supply Lines</h2>
+      <div id="supplyList" class="list"></div>
+    </section>
 
     <button id="calculate" class="btn">Calculate Quote</button>
 
