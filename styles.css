@@ -194,6 +194,9 @@ html.show-internal .internal-only{display:block !important;}
 .printArea{display:none;}
 
 @media print{
+  .pSub{
+  margin-top:2px;
+}
   @page { margin: 14mm; }
 
   body{
