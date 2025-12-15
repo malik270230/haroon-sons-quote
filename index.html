@@ -6,225 +6,246 @@
   <title>Haroon & Sons Consulting Quote</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-  <header class="top">
-    <div class="brand">
-      <img class="logo" src="logo.png" alt="Logo" />
-      <div>
-        <div class="title">Haroon & Sons Consulting Quote</div>
-        <div class="subtitle">Fast estimate • Clear scope • Clean totals</div>
-      </div>
-    </div>
-
-    <nav class="tabs" role="tablist">
-      <button class="tab active" data-tab="input">INPUT</button>
-      <button class="tab" data-tab="rates">RATES</button>
-      <button class="tab" data-tab="quote">QUOTE</button>
-      <button class="tab" data-tab="settings">SETTINGS</button>
-    </nav>
-  </header>
-
-  <main class="wrap">
-    <!-- INPUT -->
-    <section class="panel active" id="tab-input">
-      <div class="card">
-        <h2>Project Geometry (Auto Calcs)</h2>
-
-        <div class="grid2">
-          <label class="field">
-            <span>Basement Floor SF</span>
-            <input id="in_floor_sf" type="number" inputmode="numeric" />
-          </label>
-
-          <label class="field">
-            <span>Ceiling Height (ft)</span>
-            <input id="in_ceiling_ht" type="number" inputmode="decimal" />
-          </label>
-
-          <label class="field">
-            <span>Basement Length (ft) (optional)</span>
-            <input id="in_len" type="number" inputmode="decimal" />
-          </label>
-
-          <label class="field">
-            <span>Basement Width (ft) (optional)</span>
-            <input id="in_wid" type="number" inputmode="decimal" />
-          </label>
-
-          <label class="field">
-            <span>Perimeter (LF) (enter if not using L×W)</span>
-            <input id="in_perim" type="number" inputmode="decimal" />
-          </label>
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <img src="logo.png" alt="Haroon & Sons Consulting" class="logo" />
+        <div class="brandText">
+          <h1>Haroon & Sons Consulting Quote</h1>
+          <p>Fast estimate • Clear scope • Clean totals</p>
         </div>
+      </div>
 
-        <div class="card soft">
-          <div class="kpiGrid">
-            <div class="kpi">
-              <div class="k">Floor SF (auto if L×W)</div>
-              <div class="v" id="k_floor_sf">—</div>
+      <nav class="tabs" role="tablist" aria-label="Quote Tool Tabs">
+        <button class="tab active" data-tab="input">INPUT</button>
+        <button class="tab" data-tab="rates">RATES</button>
+        <button class="tab" data-tab="quote">QUOTE</button>
+        <button class="tab" data-tab="settings">SETTINGS</button>
+      </nav>
+    </header>
+
+    <main class="main">
+      <!-- INPUT -->
+      <section class="panel active" id="tab-input">
+        <div class="card">
+          <h2>Project Inputs</h2>
+
+          <div class="grid2">
+            <div class="field">
+              <label>Basement Floor SF</label>
+              <input id="inFloorSF" type="number" inputmode="decimal" placeholder="e.g., 1400" />
+              <div class="hint">If you enter Length + Width, Floor SF will auto-calc.</div>
             </div>
-            <div class="kpi">
-              <div class="k">Perimeter LF (auto)</div>
-              <div class="v" id="k_perim">—</div>
+
+            <div class="field">
+              <label>Ceiling Height (ft)</label>
+              <input id="inHeight" type="number" inputmode="decimal" placeholder="e.g., 8" />
             </div>
-            <div class="kpi">
-              <div class="k">Wall SF (Perimeter×Height)</div>
-              <div class="v" id="k_wall_sf">—</div>
+
+            <div class="field">
+              <label>Basement Length (ft) (optional)</label>
+              <input id="inLen" type="number" inputmode="decimal" placeholder="e.g., 35" />
             </div>
-            <div class="kpi">
-              <div class="k">Paint/Drywall SF (Walls+Ceiling)</div>
-              <div class="v" id="k_paint_sf">—</div>
+
+            <div class="field">
+              <label>Basement Width (ft) (optional)</label>
+              <input id="inWid" type="number" inputmode="decimal" placeholder="e.g., 40" />
             </div>
-            <div class="kpi">
-              <div class="k">Base Molding LF (auto = perimeter)</div>
-              <div class="v" id="k_base_lf">—</div>
+
+            <div class="field">
+              <label>Perimeter LF (optional override)</label>
+              <input id="inPerim" type="number" inputmode="decimal" placeholder="leave blank to auto-calc" />
+              <div class="hint">If blank, we use L×W (if provided) or assume a square from Floor SF.</div>
             </div>
-            <div class="kpi">
-              <div class="k">Total Doors (interior+solid+closet)</div>
-              <div class="v" id="k_doors_total">—</div>
+
+            <div class="field">
+              <label>Customer Name (for PDF)</label>
+              <input id="inCustomer" type="text" placeholder="Customer name" />
             </div>
-            <div class="kpi">
-              <div class="k">Door Casing LF (doors×14)</div>
-              <div class="v" id="k_casing_lf">—</div>
+
+            <div class="field">
+              <label>Customer Address (for PDF)</label>
+              <input id="inAddress" type="text" placeholder="Customer address" />
             </div>
-            <div class="kpi">
-              <div class="k">Shoe Molding LF (auto = base LF)</div>
-              <div class="v" id="k_shoe_lf">—</div>
+
+            <div class="field">
+              <label>Project Notes (for PDF)</label>
+              <input id="inNotes" type="text" placeholder="Optional notes" />
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <h3>Scope Toggles (unit-level)</h3>
+          <div id="scopeList" class="list"></div>
+
+          <div class="divider"></div>
+
+          <h3>Plumbing Fixtures (qty)</h3>
+          <div id="plumbList" class="list"></div>
+
+          <div class="divider"></div>
+
+          <h3>Doors (qty)</h3>
+          <div id="doorList" class="list"></div>
+
+          <div class="divider"></div>
+
+          <h3>Add-on Supply Lines (toggle)</h3>
+          <div id="addonList" class="list"></div>
+
+          <div class="actions">
+            <button class="btn" id="btnCalc">Calculate Quote</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RATES -->
+      <section class="panel" id="tab-rates">
+        <div class="card">
+          <div class="row">
+            <h2>Rates (unit costs)</h2>
+            <button class="btn ghost" id="btnResetRates">Reset rates to defaults</button>
+          </div>
+
+          <div class="hint">
+            These are <b>unit costs</b> split into <b>Material</b> and <b>Labor</b>. The Quote uses markups to calculate sell price.
+          </div>
+
+          <div class="tableWrap">
+            <table class="table" id="ratesTable">
+              <thead>
+                <tr>
+                  <th>ITEM</th>
+                  <th>UNIT</th>
+                  <th class="num">MAT / UNIT</th>
+                  <th class="num">LAB / UNIT</th>
+                </tr>
+              </thead>
+              <tbody id="ratesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUOTE -->
+      <section class="panel" id="tab-quote">
+        <div class="card">
+          <div class="row">
+            <h2>Quote</h2>
+            <button class="btn" id="btnPrint">Print / Save PDF</button>
+          </div>
+
+          <div class="summary" id="quoteSummary"></div>
+
+          <div class="tableWrap">
+            <table class="table" id="quoteTable">
+              <thead>
+                <tr>
+                  <th>ITEM</th>
+                  <th>UNIT</th>
+                  <th class="num">UNITS</th>
+                  <th class="num">MATERIAL</th>
+                  <th class="num">LABOR</th>
+                  <th class="num">SELL PRICE</th>
+                </tr>
+              </thead>
+              <tbody id="quoteBody"></tbody>
+            </table>
+          </div>
+
+          <div class="totals" id="quoteTotals"></div>
+
+          <!-- PRINT-ONLY LAYOUT -->
+          <div class="printOnly" id="printArea">
+            <div class="printHeader">
+              <div class="printBrand">
+                <img src="logo.png" class="printLogo" alt="Logo" />
+                <div>
+                  <div class="printTitle">Haroon &amp; Sons Consulting</div>
+                  <div class="printSub">Project Quote</div>
+                </div>
+              </div>
+
+              <div class="printMeta">
+                <div><b>Date:</b> <span id="pDate"></span></div>
+                <div><b>Customer:</b> <span id="pCustomer"></span></div>
+                <div><b>Address:</b> <span id="pAddress"></span></div>
+                <div><b>Notes:</b> <span id="pNotes"></span></div>
+              </div>
+            </div>
+
+            <div class="printKpis" id="pKpis"></div>
+
+            <table class="printTable" id="printTable">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Unit</th>
+                  <th class="num">Units</th>
+                  <th class="num">Materials</th>
+                  <th class="num">Labor</th>
+                  <th class="num">Sell Price</th>
+                </tr>
+              </thead>
+              <tbody id="printBody"></tbody>
+            </table>
+
+            <div class="printTotals" id="printTotals"></div>
+
+            <div class="printFooter">
+              <div class="tiny">Haroon &amp; Sons Consulting — Quote generated from unit-level scope. Final price subject to site verification and permit/code requirements as applicable.</div>
             </div>
           </div>
         </div>
+      </section>
 
-        <h2>Scope Toggles (Yes/No)</h2>
-        <div id="scopeList" class="list"></div>
+      <!-- SETTINGS -->
+      <section class="panel" id="tab-settings">
+        <div class="card">
+          <h2>Settings</h2>
 
-        <h2>Plumbing (Fixture Counts — supply + install)</h2>
-        <div id="fixtureList" class="list"></div>
+          <div class="grid2">
+            <div class="field">
+              <label>Materials Markup (%)</label>
+              <input id="setMatMU" type="number" inputmode="decimal" />
+            </div>
 
-        <h2>Doors (Quantity — casing included per door)</h2>
-        <div id="doorList" class="list"></div>
+            <div class="field">
+              <label>Labor Markup (%)</label>
+              <input id="setLabMU" type="number" inputmode="decimal" />
+            </div>
 
-        <h2>Add-on Supply Lines (recommended)</h2>
-        <div id="addOnList" class="list"></div>
+            <div class="field">
+              <label class="rowInline">
+                <input type="checkbox" id="setShowInternal" />
+                Show internal markup details on screen
+              </label>
+              <div class="hint">OFF = customer view. ON = shows markup line in Quote Summary (screen only). PDF never shows markup.</div>
+            </div>
 
-        <div class="actions">
-          <button id="btn_calc" class="btn primary">Calculate Quote</button>
-          <button id="btn_to_quote" class="btn">Go to QUOTE</button>
+            <div class="field">
+              <label class="rowInline">
+                <input type="checkbox" id="setDefaultsBlank" />
+                Default inputs blank (no 1400)
+              </label>
+              <div class="hint">Turn ON to start with blank fields.</div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn ghost" id="btnResetAll">Reset EVERYTHING</button>
+          </div>
+
+          <div class="hint">
+            Reset EVERYTHING clears saved inputs/rates/settings stored on your device.
+          </div>
         </div>
-      </div>
-    </section>
-
-    <!-- RATES -->
-    <section class="panel" id="tab-rates">
-      <div class="card">
-        <h2>Rates (Editable)</h2>
-        <p class="muted">These are unit COSTS. Quote applies global markups from SETTINGS (materials + labor).</p>
-
-        <div class="tableWrap">
-          <table class="tbl" id="ratesTable">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th class="w90">Unit</th>
-                <th class="w140">Material / Unit</th>
-                <th class="w140">Labor / Unit</th>
-              </tr>
-            </thead>
-            <tbody id="ratesBody"></tbody>
-          </table>
-        </div>
-
-        <div class="actions">
-          <button id="btn_save_rates" class="btn primary">Save Rates</button>
-          <button id="btn_reset_rates" class="btn danger">Reset Rates to Spreadsheet Defaults</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- QUOTE -->
-    <section class="panel" id="tab-quote">
-      <div class="card">
-        <h2>Quote Summary</h2>
-        <div class="mini" id="quoteMeta"></div>
-
-        <div class="tableWrap">
-          <table class="tbl" id="quoteTable">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th class="w90">Unit</th>
-                <th class="w90">Units</th>
-                <th class="w140">Material (w/markup)</th>
-                <th class="w140">Labor (w/markup)</th>
-                <th class="w140">Sell Price</th>
-              </tr>
-            </thead>
-            <tbody id="quoteBody"></tbody>
-            <tfoot>
-              <tr>
-                <td colspan="5" class="right strong">TOTAL SELL PRICE</td>
-                <td class="strong" id="grandTotal">$0</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <div class="actions">
-          <button id="btn_print" class="btn">Print / Save PDF</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- SETTINGS -->
-    <div class="setting-row">
-  <label class="setting-label">
-    <input type="checkbox" id="toggleInternalDetails" />
-    Show internal pricing details (markup)
-  </label>
-  <div class="setting-help">Off = customer view. On = shows markup text + “(with markup)” labels.</div>
-</div>
-    <section class="panel" id="tab-settings">
-      <div class="card">
-        <h2>Settings</h2>
-
-        <div class="grid3">
-          <label class="field">
-            <span>Materials Markup</span>
-            <input id="set_mat_mu" type="number" inputmode="decimal" step="0.01" />
-          </label>
-          <label class="field">
-            <span>Labor Markup</span>
-            <input id="set_lab_mu" type="number" inputmode="decimal" step="0.01" />
-          </label>
-          <label class="field">
-            <span>Labor Base Rate ($/hr)</span>
-            <input id="set_lab_hr" type="number" inputmode="decimal" step="1" />
-          </label>
-        </div>
-
-        <div class="actions">
-          <button id="btn_save_settings" class="btn primary">Save Settings</button>
-          <button id="btn_reset_all" class="btn danger">Reset EVERYTHING to Spreadsheet Defaults</button>
-        </div>
-
-        <h2>Export / Import</h2>
-        <p class="muted">This saves/loads your rates + settings + last inputs on this phone.</p>
-        <div class="actions">
-          <button id="btn_export" class="btn">Export JSON</button>
-          <button id="btn_import" class="btn">Import JSON</button>
-        </div>
-
-        <textarea id="jsonBox" class="jsonBox" placeholder="Export will appear here. Paste JSON here to import."></textarea>
-
-        <h2>Notes</h2>
-        <ul class="muted">
-          <li>Electrical is priced once for the whole basement (based on Floor SF).</li>
-          <li>Plumbing is fixture-based only.</li>
-          <li>Subpanel is a separate add-on toggle.</li>
-          <li>Door casing LF is auto from door quantity (doors × 14 LF). Shoe molding LF is auto from base LF.</li>
-        </ul>
-      </div>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 
   <script src="app.js"></script>
 </body>
