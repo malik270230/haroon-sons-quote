@@ -37,6 +37,13 @@ body{
 }
 .brandText h1{margin:0;font-size:26px;line-height:1.15}
 .tagline{margin:4px 0 0;color:var(--muted)}
+
+.contact{
+  margin-top:4px;
+  font-size:13px;
+  color:var(--muted);
+}
+
 .tabs{display:flex;gap:10px;margin-top:14px}
 .tab{
   flex:1;
