@@ -38,16 +38,17 @@ body{
 }
 
 /* HARD CLIPPED LOGO */
+
 .logoWrap{
-  height:42px;
-  width:120px;
+  height:52px;
+  width:170px;
   overflow:hidden;
   display:flex;
   align-items:center;
 }
 
 .logoWrap img{
-  height:42px;
+  height:52px;
   width:auto;
   object-fit:contain;
   display:block;
