@@ -5,25 +5,21 @@ const $ = (id) => document.getElementById(id);
 function money(n) {
   return "$" + (Number(n) || 0).toLocaleString();
 }
-
 function rowToggle(item, group) {
   const id = `${group}_${item.key}`;
   return `
-    <div class="row">
-      <label class="chk">
-        <input type="checkbox" id="${id}" ${item.defaultOn ? "checked" : ""}>
-        <span>${item.label}</span>
-      </label>
+    <div class="row row-toggle">
+      <input type="checkbox" class="cb" id="${id}" ${item.defaultOn ? "checked" : ""}>
+      <label class="rowLabel" for="${id}">${item.label}</label>
       <input class="amt" type="number" inputmode="numeric" id="${id}_amt" value="${item.amount}" />
     </div>
   `;
 }
-
 function rowQty(item, group) {
   const id = `${group}_${item.key}`;
   return `
-    <div class="row">
-      <div class="label">${item.label}</div>
+    <div class="row row-qty">
+      <div class="rowLabel">${item.label}</div>
       <input class="qty" type="number" inputmode="numeric" id="${id}_qty" value="0" />
       <div class="unit">${money(item.price)} / ${item.unit}</div>
     </div>
