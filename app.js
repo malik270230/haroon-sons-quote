@@ -10,13 +10,45 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 const LS_KEY = "haroon_sons_quote_v1_state";
-// ===== ADMIN (HIDDEN) SETTINGS =====
-const ADMIN_PIN = "0718"; // change later if you want
-const ADMIN_STORAGE_KEY = "hsq_admin_markup";
-function money(n){
-  const x = Number(n || 0);
-  return x.toLocaleString(undefined, {style:"currency", currency:"USD"});
-}
+/* =========================
+   ADMIN / MARKUP UNLOCK
+   Option A – iPhone friendly
+   ========================= */
+
+const ADMIN_PIN = "2702"; // ← CHANGE THIS PIN if you want
+
+let adminUnlocked = false;
+let pressTimer = null;
+
+// long-press on logo (mobile friendly)
+document.addEventListener("DOMContentLoaded", () => {
+  const logo = document.getElementById("companyLogo");
+  if (!logo) return;
+
+  const startPress = () => {
+    pressTimer = setTimeout(() => {
+      const pin = prompt("Enter admin PIN");
+      if (pin === ADMIN_PIN) {
+        adminUnlocked = true;
+        alert("Admin mode unlocked");
+        document.body.classList.add("admin-mode");
+        // optional: persist unlock for session
+        sessionStorage.setItem("adminUnlocked", "1");
+      } else {
+        alert("Wrong PIN");
+      }
+    }, 1500); // 1.5s long press
+  };
+
+  const cancelPress = () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  };
+
+  logo.addEventListener("touchstart", startPress);
+  logo.addEventListener("touchend", cancelPress);
+  logo.addEventListener("mousedown", startPress);
+  logo.addEventListener("mouseup", cancelPress);
+});
 function num(n, digits=2){
   const x = Number(n || 0);
   return x.toLocaleString(undefined, {minimumFractionDigits:digits, maximumFractionDigits:digits});
