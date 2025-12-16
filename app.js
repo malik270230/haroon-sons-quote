@@ -10,7 +10,9 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 const LS_KEY = "haroon_sons_quote_v1_state";
-
+// ===== ADMIN (HIDDEN) SETTINGS =====
+const ADMIN_PIN = "2702"; // change later if you want
+const ADMIN_STORAGE_KEY = "hsq_admin_markup";
 function money(n){
   const x = Number(n || 0);
   return x.toLocaleString(undefined, {style:"currency", currency:"USD"});
