@@ -1,48 +1,37 @@
-// Haroon & Sons Consulting Quote — app.js (FULL REPLACE)
-// Works with your data.json schema: { settings:{...}, items:[...] }
+// Haroon & Sons Consulting Quote — FINAL
+// Markup system: SQFT tier markup (combined subtotal) + Admin overrides
+// Tariff: materials-only bump (before markup)
 
 const $ = (id) => document.getElementById(id);
 
-const LS_KEY = "haroon_sons_quote_v2_state";
+const LS_KEY = "hs_quote_state_final";
+const ADMIN_PIN = "0718"; // change if you want
+const ADMIN_SESSION_KEY = "hs_admin_unlocked_final";
 
-// ======= ADMIN / MARKUP UNLOCK (Option A - iPhone friendly) =======
-const ADMIN_PIN = "0718"; // <-- change if you want
-const ADMIN_STORAGE_KEY = "hs_admin_unlocked";
+let DATA = null;
+let adminUnlocked = sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
 
-let adminUnlocked = sessionStorage.getItem(ADMIN_STORAGE_KEY) === "1";
-let pressTimer = null;
-
-// state
 const state = {
-  // inputs
   areaSF: "",
   lenFT: "",
   widFT: "",
   perimOverride: "",
   heightFT: "",
 
-  // customer
   custName: "",
   custAddr: "",
   custNotes: "",
 
-  // settings
-  muMatPct: 25,
-  muLabPct: 35,
-  serviceType: "Contractor",
-
-  // admin
+  // Admin controls (saved locally)
+  markupEnabled: true,
   tariffEnabled: false,
   tariffPct: 0,
+  overrideMarkupPct: "",
 
-  // selections
-  on: {},     // id -> bool
-  qty: {},    // id -> number (for EACH)
+  on: {},   // toggle items (scope/addons)
+  qty: {}   // each qty (fixtures/doors/EACH)
 };
 
-let DATA = null;
-
-// ---------- helpers ----------
 function toNum(v){
   const s = String(v ?? "").trim();
   if (!s) return NaN;
@@ -57,7 +46,7 @@ function money(n){
   if (!Number.isFinite(n)) return "—";
   return n.toLocaleString(undefined, { style:"currency", currency:"USD" });
 }
-function escapeHtml(s){
+function esc(s){
   return String(s ?? "")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
@@ -66,22 +55,30 @@ function escapeHtml(s){
     .replaceAll("'","&#39;");
 }
 
-// ---------- load/save ----------
 function loadState(){
   try{
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
     const obj = JSON.parse(raw);
     Object.assign(state, obj);
-  }catch(e){}
+  }catch{}
 }
 function saveState(){
-  try{
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
-  }catch(e){}
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch{}
 }
 
-// ---------- geometry ----------
+function classifyItems(items){
+  const scope=[], fixtures=[], doors=[], addons=[];
+  for (const it of items){
+    const cat = String(it.category||"").toLowerCase();
+    if (cat.includes("fixture")) fixtures.push(it);
+    else if (cat.includes("door")) doors.push(it);
+    else if (cat.includes("add-on") || cat.includes("addon") || it.unit === "PCT_MAT") addons.push(it);
+    else scope.push(it);
+  }
+  return { scope, fixtures, doors, addons };
+}
+
 function calcGeometry(){
   const L = toNum(state.lenFT);
   const W = toNum(state.widFT);
@@ -98,7 +95,7 @@ function calcGeometry(){
   const wallSF = (Number.isFinite(perim) && Number.isFinite(H)) ? perim * H : NaN;
   const paintSF = (Number.isFinite(wallSF) && Number.isFinite(area)) ? (wallSF + area) : NaN;
 
-  return { area, perim, wallSF, paintSF, H };
+  return { area, perim, wallSF, paintSF };
 }
 
 function unitsFor(unit, geo, eachQty){
@@ -113,116 +110,225 @@ function unitsFor(unit, geo, eachQty){
   }
 }
 
-// ---------- build derived lists from your items ----------
-function classifyItems(items){
-  const scope = [];
-  const fixtures = [];
-  const doors = [];
-  const addons = [];
-
-  for (const it of items){
-    const cat = String(it.category || "").toLowerCase();
-    const unit = it.unit;
-
-    const row = {
-      id: it.id,
-      label: it.label,
-      unit: it.unit,
-      matRate: Number(it.material_rate || 0),
-      labRate: Number(it.labor_rate || 0),
-      defaultOn: !!it.default_on,
-      defaultQty: (it.default_qty == null ? null : Number(it.default_qty)),
-    };
-
-    if (cat.includes("fixture")) fixtures.push(row);
-    else if (cat.includes("door")) doors.push(row);
-    else if (cat.includes("add-on") || cat.includes("addon") || unit === "PCT_MAT") addons.push(row);
-    else scope.push(row);
+function tierMarkup(area){
+  const tiers = DATA?.settings?.sqft_markup_tiers || [];
+  for (const t of tiers){
+    if (area <= Number(t.max_sqft)) return Number(t.markup);
   }
-
-  return { scope, fixtures, doors, addons };
+  return 0;
 }
 
-// ---------- render ----------
-function rowTemplate(item, kind){
-  const isQty = item.unit === "EACH" || kind === "fixture" || kind === "door";
-  const hasCheck = (kind === "scope" || kind === "addon"); // toggles only
+function effectiveMarkupPct(area){
+  const override = toNum(state.overrideMarkupPct);
+  if (Number.isFinite(override)) return Math.max(0, override / 100);
+  return tierMarkup(area);
+}
 
-  const checked = hasCheck ? !!state.on[item.id] : true;
-  const qtyVal = Number(state.qty[item.id] ?? (item.defaultQty ?? 0));
+function renderRates(){
+  const tbody = $("ratesBody");
+  tbody.innerHTML = DATA.items.map(it => `
+    <tr>
+      <td>${esc(it.label)}</td>
+      <td>${esc(it.unit)}</td>
+      <td class="num">${money(Number(it.material_rate)||0)}</td>
+      <td class="num">${money(Number(it.labor_rate)||0)}</td>
+    </tr>
+  `).join("");
+}
+
+function rowTemplate(it, kind){
+  const isToggle = (kind === "scope" || kind === "addon");
+  const needsQty = (it.unit === "EACH" || kind === "fixture" || kind === "door");
+
+  const checked = isToggle ? !!state.on[it.id] : true;
+  const qtyVal = Number(state.qty[it.id] ?? (it.default_qty ?? 0));
 
   return `
-    <div class="row" data-kind="${kind}" data-id="${escapeHtml(item.id)}">
-      ${hasCheck ? `
-        <label class="chk">
-          <input class="check" type="checkbox" ${checked ? "checked" : ""} />
-          <span>${escapeHtml(item.label)}</span>
-        </label>
-      ` : `
-        <div class="labelOnly">${escapeHtml(item.label)}</div>
-      `}
-      <div class="meta">${escapeHtml(item.unit)} • mat ${fmt(item.matRate)} • labor ${fmt(item.labRate)}</div>
-
-      ${isQty ? `
-        <div class="qtyWrap">
-          <input class="qty" inputmode="decimal" value="${Number.isFinite(qtyVal)?qtyVal:0}" />
-          <div class="muted">${kind === "scope" || kind === "addon" ? "EACH qty" : "qty"}</div>
-        </div>
-      ` : ``}
+    <div class="row" data-id="${esc(it.id)}" data-kind="${kind}">
+      <div class="rowTop">
+        ${isToggle ? `
+          <label class="chk">
+            <input class="check" type="checkbox" ${checked ? "checked" : ""} />
+            <span>${esc(it.label)}</span>
+          </label>
+        ` : `
+          <div style="font-weight:900">${esc(it.label)}</div>
+        `}
+        ${needsQty ? `
+          <div class="qtyWrap">
+            <input class="qty" inputmode="decimal" value="${Number.isFinite(qtyVal)?qtyVal:0}" />
+          </div>
+        ` : ``}
+      </div>
+      <div class="meta">${esc(it.unit)} • material ${fmt(Number(it.material_rate)||0)} • labor ${fmt(Number(it.labor_rate)||0)}</div>
     </div>
   `;
 }
 
-function renderAll(){
-  const c = DATA.settings?.company || {};
-  if ($("companyName")) $("companyName").textContent = c.name || "Haroon & Sons Consulting Quote";
-  if ($("companyPhone")){
-    $("companyPhone").textContent = `📞 ${c.phone || ""}`.trim();
-    $("companyPhone").href = `tel:${String(c.phone||"").replace(/\D/g,"")}`;
-  }
-  if ($("companyEmail")){
-    $("companyEmail").textContent = `✉️ ${c.email || ""}`.trim();
-    $("companyEmail").href = `mailto:${c.email || ""}`;
-  }
-  if ($("companyLogo") && c.logo) $("companyLogo").src = c.logo;
+function renderLists(){
+  const { scope, fixtures, doors, addons } = classifyItems(DATA.items);
 
-  // markups
-  const mu = DATA.settings?.markups || {};
-  state.muMatPct = Number.isFinite(toNum(state.muMatPct)) ? Number(state.muMatPct) : Math.round((mu.materials || 0.25) * 100);
-  state.muLabPct = Number.isFinite(toNum(state.muLabPct)) ? Number(state.muLabPct) : Math.round((mu.labor || 0.35) * 100);
-
-  if ($("muMat")) $("muMat").value = state.muMatPct;
-  if ($("muLab")) $("muLab").value = state.muLabPct;
-
-  const { scope, fixtures, doors, addons } = classifyItems(DATA.items || []);
-
-  // init defaults
+  // initialize defaults once
   for (const it of scope){
-    if (state.on[it.id] == null) state.on[it.id] = !!it.defaultOn;
+    if (state.on[it.id] == null) state.on[it.id] = !!it.default_on;
     if (state.qty[it.id] == null) state.qty[it.id] = 1;
   }
   for (const it of addons){
-    if (state.on[it.id] == null) state.on[it.id] = !!it.defaultOn;
+    if (state.on[it.id] == null) state.on[it.id] = !!it.default_on;
     if (state.qty[it.id] == null) state.qty[it.id] = 1;
   }
   for (const it of fixtures){
-    if (state.qty[it.id] == null) state.qty[it.id] = Number(it.defaultQty ?? 0);
+    if (state.qty[it.id] == null) state.qty[it.id] = Number(it.default_qty ?? 0);
   }
   for (const it of doors){
-    if (state.qty[it.id] == null) state.qty[it.id] = Number(it.defaultQty ?? 0);
+    if (state.qty[it.id] == null) state.qty[it.id] = Number(it.default_qty ?? 0);
   }
 
   $("scopeList").innerHTML = scope.map(it => rowTemplate(it,"scope")).join("");
   $("fixtureList").innerHTML = fixtures.map(it => rowTemplate(it,"fixture")).join("");
   $("doorList").innerHTML = doors.map(it => rowTemplate(it,"door")).join("");
   $("addonList").innerHTML = addons.map(it => rowTemplate(it,"addon")).join("");
-
-  liveGeometry();
-  setAdminUI();
-  saveState();
 }
 
-// ---------- tabs ----------
+function setCompany(){
+  const c = DATA.settings.company || {};
+  $("companyName").textContent = c.name || "Haroon & Sons Consulting Quote";
+  $("companyPhone").textContent = `📞 ${c.phone||""}`.trim();
+  $("companyPhone").href = `tel:${String(c.phone||"").replace(/\D/g,"")}`;
+  $("companyEmail").textContent = `✉️ ${c.email||""}`.trim();
+  $("companyEmail").href = `mailto:${c.email||""}`;
+  if (c.logo) $("companyLogo").src = c.logo;
+}
+
+function updateKPIs(geo){
+  $("kPerim").textContent = Number.isFinite(geo.perim) ? fmt(geo.perim) : "—";
+  $("kWall").textContent  = Number.isFinite(geo.wallSF) ? fmt(geo.wallSF) : "—";
+  $("kPaint").textContent = Number.isFinite(geo.paintSF) ? fmt(geo.paintSF) : "—";
+}
+
+function computeAndRenderQuote(){
+  const geo = calcGeometry();
+  updateKPIs(geo);
+
+  const area = geo.area;
+  if (!Number.isFinite(area) || area <= 0){
+    $("quoteBody").innerHTML = "";
+    $("quoteTotal").textContent = "—";
+    $("rawTotal").textContent = "—";
+    $("markupShown").textContent = "—";
+    $("tariffShown").textContent = "—";
+    $("tierLine").textContent = "Markup tier: —";
+    $("quoteMeta").textContent = "Enter project area to generate totals.";
+    return;
+  }
+
+  const mk = effectiveMarkupPct(area);
+  const mkLabel = `${Math.round(mk*100)}%`;
+  const tariffPct = state.tariffEnabled ? (Number(toNum(state.tariffPct)) || 0) : 0;
+  $("tierLine").textContent = `Markup tier: ${mkLabel} (${Math.round(area)} SF)` + (state.markupEnabled ? "" : " (OFF)");
+
+  const { scope, fixtures, doors, addons } = classifyItems(DATA.items);
+
+  const rows = [];
+  let rawMaterials = 0;
+  let rawLabor = 0;
+
+  function includeItem(it, qtyEach){
+    const units = unitsFor(it.unit, geo, qtyEach);
+    if (!Number.isFinite(units) || units <= 0) return;
+
+    const mat = (Number(it.material_rate)||0) * units;
+    const lab = (Number(it.labor_rate)||0) * units;
+
+    rawMaterials += mat;
+    rawLabor += lab;
+
+    rows.push({
+      label: it.label,
+      unit: it.unit,
+      units,
+      raw: mat + lab,
+      mat,
+      lab
+    });
+  }
+
+  // scope toggles
+  for (const it of scope){
+    if (!state.on[it.id]) continue;
+    const q = (it.unit === "EACH") ? (Number(state.qty[it.id])||0) : 1;
+    includeItem(it, q);
+  }
+
+  // fixtures/doors qty
+  for (const it of fixtures){
+    const q = Number(state.qty[it.id])||0;
+    if (q <= 0) continue;
+    includeItem(it, q);
+  }
+  for (const it of doors){
+    const q = Number(state.qty[it.id])||0;
+    if (q <= 0) continue;
+    includeItem(it, q);
+  }
+
+  // addons (including PCT_MAT)
+  let pctMatItem = null;
+  for (const it of addons){
+    if (!state.on[it.id]) continue;
+    if (it.unit === "PCT_MAT"){ pctMatItem = it; continue; }
+    const q = (it.unit === "EACH") ? (Number(state.qty[it.id])||0) : 1;
+    includeItem(it, q);
+  }
+
+  // Apply tariff (materials only) BEFORE markup
+  const tariffMult = 1 + (tariffPct / 100);
+  const rawMaterialsTariffed = rawMaterials * tariffMult;
+  const rawSubtotalAfterTariff = rawMaterialsTariffed + rawLabor;
+
+  // PCT_MAT line is % of RAW MATERIALS (after tariff) (matches label intent)
+  if (pctMatItem){
+    const pct = Number(pctMatItem.material_rate)||0; // e.g., 0.05
+    if (pct > 0){
+      const addRaw = rawMaterialsTariffed * pct;
+      rows.push({
+        label: pctMatItem.label,
+        unit: "PCT_MAT",
+        units: pct * 100,
+        raw: addRaw,
+        mat: addRaw,
+        lab: 0
+      });
+    }
+  }
+
+  // total raw includes PCT_MAT add
+  const rawTotal = rows.reduce((s,r)=>s + (r.raw||0), 0);
+
+  // Sell = rawTotal * (1 + markup) if markup enabled; else rawTotal
+  const sellTotal = state.markupEnabled ? rawTotal * (1 + mk) : rawTotal;
+
+  // Render
+  $("quoteBody").innerHTML = rows.map(r => `
+    <tr>
+      <td>${esc(r.label)}</td>
+      <td>${esc(r.unit)}</td>
+      <td class="num">${fmt(r.units)}</td>
+      <td class="num">${money(r.raw)}</td>
+      <td class="num"><b>${money(state.markupEnabled ? (r.raw*(1+mk)) : r.raw)}</b></td>
+    </tr>
+  `).join("");
+
+  $("quoteTotal").textContent = money(sellTotal);
+  $("rawTotal").textContent = money(rawTotal);
+  $("markupShown").textContent = state.markupEnabled ? `${Math.round(mk*100)}%` : "OFF";
+  $("tariffShown").textContent = state.tariffEnabled ? `${tariffPct}%` : "OFF";
+
+  const nm = state.custName?.trim() || "—";
+  const ad = state.custAddr?.trim() || "—";
+  $("quoteMeta").innerHTML = `Customer: <b>${esc(nm)}</b> • Address: <b>${esc(ad)}</b>`;
+}
+
 function bindTabs(){
   document.querySelectorAll(".tab").forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -230,33 +336,35 @@ function bindTabs(){
       btn.classList.add("active");
       const t = btn.dataset.tab;
       document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
-      document.getElementById(`tab-${t}`)?.classList.add("active");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      $("tab-"+t).classList.add("active");
+      window.scrollTo({ top:0, behavior:"smooth" });
     });
   });
 }
 
-// ---------- inputs ----------
 function bindInputs(){
-  // geometry
-  $("areaSF").addEventListener("input", e => { state.areaSF = e.target.value; liveGeometry(); saveState(); });
-  $("lenFT").addEventListener("input", e => { state.lenFT = e.target.value; liveGeometry(); saveState(); });
-  $("widFT").addEventListener("input", e => { state.widFT = e.target.value; liveGeometry(); saveState(); });
-  $("perimOverride").addEventListener("input", e => { state.perimOverride = e.target.value; liveGeometry(); saveState(); });
-  $("heightFT").addEventListener("input", e => { state.heightFT = e.target.value; liveGeometry(); saveState(); });
+  const map = [
+    ["areaSF","areaSF"],
+    ["lenFT","lenFT"],
+    ["widFT","widFT"],
+    ["perimOverride","perimOverride"],
+    ["heightFT","heightFT"],
+    ["custName","custName"],
+    ["custAddr","custAddr"],
+    ["custNotes","custNotes"]
+  ];
+  for (const [id,key] of map){
+    $(id).addEventListener("input", (e)=>{
+      state[key] = e.target.value;
+      saveState();
+      computeAndRenderQuote();
+    });
+  }
 
-  // customer
-  $("custName").addEventListener("input", e => { state.custName = e.target.value; saveState(); });
-  $("custAddr").addEventListener("input", e => { state.custAddr = e.target.value; saveState(); });
-  $("custNotes").addEventListener("input", e => { state.custNotes = e.target.value; saveState(); });
-
-  // markups
-  $("muMat").addEventListener("input", e => { state.muMatPct = e.target.value; saveState(); });
-  $("muLab").addEventListener("input", e => { state.muLabPct = e.target.value; saveState(); });
-
-  // buttons
-  $("btnCalc").addEventListener("click", generateQuote);
-  $("btnPrint").addEventListener("click", printPDF);
+  $("btnRecalc").addEventListener("click", ()=>{
+    computeAndRenderQuote();
+  });
+  $("btnPrint").addEventListener("click", ()=>window.print());
 
   // delegate toggles/qty
   document.addEventListener("change", (e)=>{
@@ -266,232 +374,117 @@ function bindInputs(){
     if (e.target.classList.contains("check")){
       state.on[id] = !!e.target.checked;
       saveState();
+      computeAndRenderQuote();
+    }
+    if (e.target.id === "markupEnabled" || e.target.id === "tariffEnabled"){
+      // handled in admin section
     }
   });
+
   document.addEventListener("input", (e)=>{
     if (!e.target.classList.contains("qty")) return;
     const row = e.target.closest?.(".row");
     if (!row) return;
     const id = row.dataset.id;
-    const v = toNum(e.target.value);
-    state.qty[id] = Number.isFinite(v) ? v : 0;
+    state.qty[id] = Number(toNum(e.target.value)) || 0;
     saveState();
+    computeAndRenderQuote();
   });
 }
 
-function liveGeometry(){
-  const g = calcGeometry();
-  $("perimOut").textContent = Number.isFinite(g.perim) ? fmt(g.perim) : "—";
-  $("wallOut").textContent = Number.isFinite(g.wallSF) ? fmt(g.wallSF) : "—";
-  $("paintOut").textContent = Number.isFinite(g.paintSF) ? fmt(g.paintSF) : "—";
-
-  const ok = Number.isFinite(g.area) && g.area > 0;
-  $("calcHint").textContent = ok
-    ? "Ready. Tap Calculate Quote."
-    : "Tip: Enter Project Area (SF) or Length & Width. Quote won’t calculate without area.";
+function applyStateToUI(){
+  $("areaSF").value = state.areaSF;
+  $("lenFT").value = state.lenFT;
+  $("widFT").value = state.widFT;
+  $("perimOverride").value = state.perimOverride;
+  $("heightFT").value = state.heightFT;
+  $("custName").value = state.custName;
+  $("custAddr").value = state.custAddr;
+  $("custNotes").value = state.custNotes;
 }
 
-// ---------- quote calc ----------
-function buildLine(item, qtyEach, geo, muMat, muLab, tariffEnabled, tariffPct){
-  const units = unitsFor(item.unit, geo, qtyEach);
-  if (!Number.isFinite(units) || units <= 0) return null;
-
-  const rawMat = (Number(item.matRate)||0) * units;
-  const rawLab = (Number(item.labRate)||0) * units;
-
-  // tariff only hits materials (optional)
-  const tariffMult = tariffEnabled ? (1 + (tariffPct/100)) : 1;
-
-  const matSell = (rawMat * tariffMult) * (1 + muMat);
-  const labSell = rawLab * (1 + muLab);
-
-  return {
-    label: item.label,
-    unit: item.unit,
-    units,
-    matSell,
-    labSell,
-    sell: matSell + labSell
-  };
-}
-
-function generateQuote(){
-  const geo = calcGeometry();
-  if (!Number.isFinite(geo.area) || geo.area <= 0){
-    alert("Enter Project Area (SF) OR Length & Width first.");
-    return;
-  }
-
-  const muMat = (Number(toNum(state.muMatPct)) || 0) / 100;
-  const muLab = (Number(toNum(state.muLabPct)) || 0) / 100;
-
-  const tariffEnabled = !!state.tariffEnabled;
-  const tariffPct = Number(toNum(state.tariffPct)) || 0;
-
-  const { scope, fixtures, doors, addons } = classifyItems(DATA.items || []);
-
-  const rows = [];
-
-  // scope
-  for (const it of scope){
-    if (!state.on[it.id]) continue;
-    const qty = (it.unit === "EACH") ? (Number(state.qty[it.id]) || 0) : 1;
-    const line = buildLine(it, qty, geo, muMat, muLab, tariffEnabled, tariffPct);
-    if (line) rows.push(line);
-  }
-
-  // fixtures & doors
-  for (const it of fixtures){
-    const qty = Number(state.qty[it.id]) || 0;
-    if (qty <= 0) continue;
-    const line = buildLine(it, qty, geo, muMat, muLab, tariffEnabled, tariffPct);
-    if (line) rows.push(line);
-  }
-  for (const it of doors){
-    const qty = Number(state.qty[it.id]) || 0;
-    if (qty <= 0) continue;
-    const line = buildLine(it, qty, geo, muMat, muLab, tariffEnabled, tariffPct);
-    if (line) rows.push(line);
-  }
-
-  // addons (including PCT_MAT if present)
-  let pctMatAddon = null;
-  for (const it of addons){
-    if (!state.on[it.id]) continue;
-    if (it.unit === "PCT_MAT"){ pctMatAddon = it; continue; }
-    const qty = (it.unit === "EACH") ? (Number(state.qty[it.id]) || 0) : 1;
-    const line = buildLine(it, qty, geo, muMat, muLab, tariffEnabled, tariffPct);
-    if (line) rows.push(line);
-  }
-
-  // PCT_MAT: based on material subtotal (SELL materials so it tracks tariff + markup cleanly)
-  if (pctMatAddon){
-    const matSubtotal = rows.reduce((s,r)=>s + (r.matSell||0), 0);
-    const pct = Number(pctMatAddon.matRate || 0); // e.g. 0.05
-    if (pct > 0){
-      rows.push({
-        label: pctMatAddon.label,
-        unit: "PCT_MAT",
-        units: pct * 100,
-        matSell: matSubtotal * pct,
-        labSell: 0,
-        sell: matSubtotal * pct
-      });
-    }
-  }
-
-  // render
-  const body = $("quoteBody");
-  body.innerHTML = rows.map(r => `
-    <tr>
-      <td>${escapeHtml(r.label)}</td>
-      <td>${escapeHtml(r.unit)}</td>
-      <td class="num">${fmt(r.units)}</td>
-      <td class="num">${money(r.matSell)}</td>
-      <td class="num">${money(r.labSell)}</td>
-      <td class="num"><b>${money(r.sell)}</b></td>
-    </tr>
-  `).join("");
-
-  const total = rows.reduce((s,r)=>s + (r.sell||0), 0);
-  $("quoteTotal").textContent = money(total);
-
-  $("quoteSummary").innerHTML = `
-    <div><b>Customer:</b> ${escapeHtml(state.custName || "—")}</div>
-    <div><b>Address:</b> ${escapeHtml(state.custAddr || "—")}</div>
-    <div class="muted" style="margin-top:8px">
-      Area: ${fmt(geo.area)} SF • Perimeter: ${Number.isFinite(geo.perim)?fmt(geo.perim):"—"} LF •
-      Wall SF: ${Number.isFinite(geo.wallSF)?fmt(geo.wallSF):"—"} • Paint/Drywall SF: ${Number.isFinite(geo.paintSF)?fmt(geo.paintSF):"—"}<br/>
-      Materials MU: ${Math.round(toNum(state.muMatPct)||0)}% • Labor MU: ${Math.round(toNum(state.muLabPct)||0)}%
-      ${tariffEnabled ? ` • Tariff bump: ${tariffPct}% (materials only)` : ``}
-    </div>
-  `;
-
-  // jump to quote tab
-  document.querySelector(`.tab[data-tab="quote"]`)?.click();
-}
-
-// ---------- printing ----------
-function printPDF(){
-  // Keep it simple: use browser print
-  window.print();
-}
-
-// ---------- admin unlock ----------
 function setAdminUI(){
-  const box = $("adminBox");
-  if (!box) return;
-  box.classList.toggle("hidden", !adminUnlocked);
+  $("adminPanel").classList.toggle("hidden", !adminUnlocked);
+  if (!adminUnlocked) return;
 
-  if ($("tariffEnabled")) $("tariffEnabled").checked = !!state.tariffEnabled;
-  if ($("tariffPct")) $("tariffPct").value = String(state.tariffPct ?? 0);
+  $("markupEnabled").checked = !!state.markupEnabled;
+  $("tariffEnabled").checked = !!state.tariffEnabled;
+  $("tariffPct").value = String(state.tariffPct ?? 0);
+  $("overrideMarkupPct").value = String(state.overrideMarkupPct ?? "");
 }
 
 function bindAdmin(){
+  let pressTimer = null;
   const logo = $("companyLogo");
-  if (logo){
-    const startPress = () => {
-      pressTimer = setTimeout(() => {
-        const pin = prompt("Enter admin PIN");
-        if (pin === ADMIN_PIN){
-          adminUnlocked = true;
-          sessionStorage.setItem(ADMIN_STORAGE_KEY,"1");
-          setAdminUI();
-          alert("Admin unlocked");
-        } else {
-          alert("Wrong PIN");
-        }
-      }, 900); // ~1 second
-    };
-    const cancelPress = () => {
-      if (pressTimer) clearTimeout(pressTimer);
-      pressTimer = null;
-    };
 
-    logo.addEventListener("touchstart", startPress, { passive:true });
-    logo.addEventListener("touchend", cancelPress);
-    logo.addEventListener("touchmove", cancelPress);
-    logo.addEventListener("mousedown", startPress);
-    logo.addEventListener("mouseup", cancelPress);
-    logo.addEventListener("mouseleave", cancelPress);
-  }
+  const start = ()=>{
+    pressTimer = setTimeout(()=>{
+      const pin = prompt("Enter admin PIN");
+      if (pin === ADMIN_PIN){
+        adminUnlocked = true;
+        sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+        setAdminUI();
+        $("adminStatus").textContent = "Admin unlocked.";
+      } else {
+        alert("Wrong PIN");
+      }
+    }, 900);
+  };
+  const cancel = ()=>{
+    if (pressTimer) clearTimeout(pressTimer);
+    pressTimer = null;
+  };
 
-  $("adminApplyBtn")?.addEventListener("click", ()=>{
+  // iPhone friendly
+  logo.addEventListener("touchstart", start, { passive:true });
+  logo.addEventListener("touchend", cancel);
+  logo.addEventListener("touchmove", cancel);
+  // desktop fallback
+  logo.addEventListener("mousedown", start);
+  logo.addEventListener("mouseup", cancel);
+  logo.addEventListener("mouseleave", cancel);
+
+  $("adminSave").addEventListener("click", ()=>{
     if (!adminUnlocked) return;
+
+    state.markupEnabled = !!$("markupEnabled").checked;
     state.tariffEnabled = !!$("tariffEnabled").checked;
     state.tariffPct = Number(toNum($("tariffPct").value)) || 0;
-    $("adminStateMsg").textContent = "Saved. Recalculate quote to apply.";
+    state.overrideMarkupPct = $("overrideMarkupPct").value;
+
     saveState();
+    computeAndRenderQuote();
+    $("adminStatus").textContent = "Saved. Quote updated.";
   });
 
-  $("adminClearBtn")?.addEventListener("click", ()=>{
+  $("adminLock").addEventListener("click", ()=>{
     adminUnlocked = false;
-    sessionStorage.removeItem(ADMIN_STORAGE_KEY);
-    $("adminStateMsg").textContent = "Locked.";
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    $("adminStatus").textContent = "Locked.";
     setAdminUI();
   });
 }
 
-// ---------- boot ----------
 async function boot(){
-  try{
-    loadState();
+  loadState();
 
-    // cache-bust
-    const url = `data.json?v=${Date.now()}`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("Cannot load data.json");
-
-    DATA = await res.json();
-
-    bindTabs();
-    bindInputs();
-    bindAdmin();
-    renderAll();
-  }catch(e){
-    alert("Error loading app files. Make sure index.html, app.js, styles.css, data.json are all in the SAME folder (repo root).");
-    console.error(e);
+  // fetch JSON from same folder (GitHub Pages friendly)
+  const res = await fetch(`data.json?v=${Date.now()}`, { cache:"no-store" });
+  if (!res.ok) {
+    alert("Cannot load data.json. Make sure it is in the repo root with index.html/app.js/styles.css.");
+    return;
   }
+  DATA = await res.json();
+
+  setCompany();
+  bindTabs();
+  renderLists();
+  renderRates();
+  bindInputs();
+  bindAdmin();
+  applyStateToUI();
+  setAdminUI();
+  computeAndRenderQuote();
 }
 
 document.addEventListener("DOMContentLoaded", boot);
