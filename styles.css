@@ -235,27 +235,46 @@ h3{margin:0 0 10px; font-size:16px; color:rgba(233,238,252,.95)}
 /* PRINT: clean PDF with header + totals aligned */
 @media print{
   body{background:#fff; color:#000}
-  .hero, .tabs, .btnrow, .hint, .noPrint{display:none !important}
-  .card{box-shadow:none; border:1px solid #ddd; background:#fff}
-  .tablewrap{border:none}
-  .tbl{min-width:0}
-  .tbl thead{display: table-header-group;}
-  .tbl tfoot{display: table-footer-group;}
+  .hero, .tabs, .btnrow, .hint{display:none !important}
+
+  /* IMPORTANT: stop the “scroll box” from clipping */
+  .tablewrap{
+    overflow: visible !important;
+    border: none !important;
+  }
+
+  .card{
+    box-shadow:none;
+    border:1px solid #ddd;
+    background:#fff;
+    padding: 10px;
+  }
+
+  /* Make the table fit the page */
+  .tbl{
+    width:100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;   /* forces columns to stay inside page */
+    border-collapse: collapse;
+  }
+
+  /* Smaller text + tighter padding so nothing gets chopped */
+  .tbl th, .tbl td{
+    font-size: 10px !important;
+    padding: 6px 6px !important;
+    white-space: normal !important;   /* allow wrap */
+    word-break: break-word;
+    border-bottom:1px solid #e6e6e6;
+  }
+
   .tbl thead th{
     background:#f3f3f3 !important;
     color:#000 !important;
-    position:static !important;
-  }
-  .tbl th, .tbl td{
-    border-bottom:1px solid #e6e6e6;
-    color:#000;
-  }
-  .tbl tfoot td{
-    background:#f3f3f3 !important;
-    color:#000 !important;
-    font-size:16px;
   }
 
-  /* Show print header */
-  .printHeader{display:block !important}
+  .tbl tfoot td{
+    background:#f3f3f3 !important;
+    font-weight: 800;
+    font-size: 12px !important;
+  }
 }
