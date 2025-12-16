@@ -1,494 +1,548 @@
-/* Haroon & Sons Consulting Quote — FINAL
-   - Loads data.json
-   - Calculates geometry (perimeter, wall SF, paint SF)
-   - Scope toggles + qty inputs for EACH/LF
-   - Raw subtotal + sqft markup tiers (one markup, not 25/35%)
-   - Hidden admin (long-press logo) for markup/tariff overrides
-   - iPhone friendly
-   - LocalStorage persistence
+/* Haroon & Sons Consulting Quote - FINAL REBUILD
+   Fixes:
+   - Plumbing Supplies Allowance (each fixture) auto-qty works
+   - Job Consumables & Fasteners (% of raw materials) calculates correctly
+   - Rates page shows % items correctly
+   - Markup is BY SQFT TIERS ONLY (no 25/35 baked into items)
+   - Hidden admin: Markup ON/OFF, Markup Override %, Tariff ON/OFF, Tariff %
 */
 
-(() => {
-  const VERSION = "9999"; // bump this if you want to hard-refresh caches
-  const LS_KEY = "hsq_state_v1";
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-  const $ = (id) => document.getElementById(id);
-  const fmtMoney = (n) => `$${(Number.isFinite(n) ? n : 0).toFixed(2)}`;
-  const fmtNum = (n, d=1) => (Number.isFinite(n) ? n.toFixed(d) : "—");
+const LS_KEY = "haroon_sons_quote_v3_state";
+const ADMIN_PIN = "0718"; // change if you want
 
-  let DATA = null;
+let DATA = null;
 
-  // App state (persisted)
-  const state = {
-    inputs: {
-      floorSF: "",
-      ceilFt: "",
-      lenFt: "",
-      widFt: "",
-      perimLF: ""
-    },
-    scope: {
-      // id: { on: true/false, qty: number|null, qtyOverride: boolean }
-    },
+function defaultState() {
+  return {
+    inputs: { floorSF:"", ceilFt:"8", lenFt:"", widFt:"", perimLF:"" },
+    enabled: {},   // {itemId: boolean}
+    qty: {},       // {itemId: number/string} for EACH items
     admin: {
       unlocked: false,
       markupEnabled: true,
-      markupOverridePct: "",  // "" => no override
+      markupOverridePct: "",
       tariffEnabled: false,
-      tariffPct: ""           // "" => 0
+      tariffPct: ""
     }
   };
+}
 
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (!raw) return;
-      const s = JSON.parse(raw);
-      if (!s || typeof s !== "object") return;
-      // shallow merge safe
-      if (s.inputs) Object.assign(state.inputs, s.inputs);
-      if (s.scope) state.scope = s.scope;
-      if (s.admin) Object.assign(state.admin, s.admin);
-    } catch { /* ignore */ }
+let STATE = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return defaultState();
+    const obj = JSON.parse(raw);
+    const d = defaultState();
+    return {
+      inputs: { ...d.inputs, ...(obj.inputs||{}) },
+      enabled: { ...(obj.enabled||{}) },
+      qty: { ...(obj.qty||{}) },
+      admin: { ...d.admin, ...(obj.admin||{}) }
+    };
+  }catch{
+    return defaultState();
+  }
+}
+function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(STATE));
+}
+
+function safeNum(v){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+function money(n){
+  const x = safeNum(n);
+  return x.toLocaleString(undefined,{style:"currency",currency:"USD"});
+}
+function num(n,d=2){
+  const x = safeNum(n);
+  return x.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+
+/* ------------------ Markup / Tariff ------------------ */
+function tierMarkupPct(floorSF){
+  const tiers = (DATA?.settings?.markup_tiers || []).slice().sort((a,b)=>a.max_sf-b.max_sf);
+  if(!tiers.length) return 0;
+  for(const t of tiers){
+    if(floorSF <= t.max_sf) return safeNum(t.pct);
+  }
+  return safeNum(tiers[tiers.length-1].pct);
+}
+function effectiveMarkupPct(floorSF){
+  if(!STATE.admin.markupEnabled) return 0;
+  const o = String(STATE.admin.markupOverridePct||"").trim();
+  if(o !== "") return safeNum(o)/100;
+  return tierMarkupPct(floorSF);
+}
+function effectiveTariffPct(){
+  if(!STATE.admin.tariffEnabled) return 0;
+  const t = String(STATE.admin.tariffPct||"").trim();
+  if(t === "") return 0;
+  return safeNum(t)/100;
+}
+
+/* ------------------ Geometry ------------------ */
+function calcGeometry(){
+  const floorSF = safeNum($("#inFloorSF").value);
+  const ceilFt  = Math.max(0, safeNum($("#inCeilFt").value) || 8);
+  const lenFt   = safeNum($("#inLenFt").value);
+  const widFt   = safeNum($("#inWidFt").value);
+  const perOv   = safeNum($("#inPerimLF").value);
+
+  let perimLF = 0;
+  if(perOv>0) perimLF = perOv;
+  else if(lenFt>0 && widFt>0) perimLF = 2*(lenFt+widFt);
+  else if(floorSF>0){
+    const side = Math.sqrt(floorSF);
+    perimLF = 4*side; // square assumption if only SF known
   }
 
-  function saveState() {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch { /* ignore */ }
+  const wallSF  = perimLF * ceilFt;
+  const paintSF = wallSF + floorSF; // walls + ceiling
+
+  return {floorSF,ceilFt,lenFt,widFt,perimLF,wallSF,paintSF};
+}
+function baseQtyForUnit(unit, geo){
+  switch(unit){
+    case "FLOOR_SF": return geo.floorSF;
+    case "WALL_SF":  return geo.wallSF;
+    case "PAINT_SF": return geo.paintSF;
+    case "LF":       return geo.perimLF;
+    case "EACH":     return 0;      // per-item
+    case "PCT_MAT":  return 1;      // computed later
+    default: return 0;
   }
+}
 
-  function hardReset() {
-    try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
-    location.reload();
+/* ------------------ Enable / Qty ------------------ */
+function isEnabled(item){
+  if(STATE.enabled[item.id] === undefined) return !!item.default_on;
+  return !!STATE.enabled[item.id];
+}
+function getEachQty(item){
+  const v = STATE.qty[item.id];
+  if(v === undefined || v === null || v === ""){
+    return safeNum(item.default_qty ?? 0);
   }
+  return safeNum(v);
+}
 
-  function showFatal(msg) {
-    const el = $("fatal");
-    if (!el) {
-      alert(msg);
-      return;
-    }
-    el.classList.remove("hidden");
-    el.textContent = msg;
+/* ------------------ UI: Tabs ------------------ */
+function setTab(name){
+  $$(".tab").forEach(b=>b.classList.toggle("active", b.dataset.tab===name));
+  $$(".panel").forEach(p=>p.classList.toggle("active", p.id===`tab-${name}`));
+}
+
+/* ------------------ UI: Scope list ------------------ */
+function renderScopeList(){
+  const wrap = $("#scopeList");
+  wrap.innerHTML = "";
+
+  const items = DATA.items.slice();
+  const groups = {};
+  for(const it of items){
+    const cat = it.category || "Other";
+    (groups[cat] ||= []).push(it);
   }
+  const preferred = ["Scope","Fixtures","Doors","Add-ons","Other"];
+  const cats = Array.from(new Set([...preferred, ...Object.keys(groups)])).filter(c=>groups[c]?.length);
 
-  function parseNum(v) {
-    const n = Number(String(v ?? "").trim());
-    return Number.isFinite(n) ? n : 0;
-  }
+  for(const cat of cats){
+    const head = document.createElement("div");
+    head.className = "hint";
+    head.style.marginTop = "6px";
+    head.style.fontWeight = "900";
+    head.textContent = cat.toUpperCase();
+    wrap.appendChild(head);
 
-  function getDefaultCeil() {
-    return parseNum(DATA?.settings?.defaults?.ceilingHeight) || 8;
-  }
+    for(const it of groups[cat]){
+      const row = document.createElement("label");
+      row.className = "chk";
 
-  function getMarkupTier(sf) {
-    const tiers = DATA?.settings?.markup_tiers || [];
-    for (const t of tiers) {
-      if (sf <= t.max_sf) return t;
-    }
-    // fallback
-    return { max_sf: 999999, pct: 0.25, label: "25%" };
-  }
-
-  function getMarkupPct(sf) {
-    if (!state.admin.markupEnabled) return 0;
-
-    const override = parseNum(state.admin.markupOverridePct);
-    if (override > 0) return override / 100;
-
-    return getMarkupTier(sf).pct || 0;
-  }
-
-  function getTariffPct() {
-    if (!state.admin.tariffEnabled) return 0;
-    const p = parseNum(state.admin.tariffPct);
-    return p > 0 ? (p / 100) : 0;
-  }
-
-  function geometry() {
-    const floorSF = parseNum($("inFloorSF").value);
-    const ceilFt = parseNum($("inCeilFt").value) || getDefaultCeil();
-    const lenFt = parseNum($("inLenFt").value);
-    const widFt = parseNum($("inWidFt").value);
-    const perimOverride = parseNum($("inPerimLF").value);
-
-    // Perimeter:
-    // 1) manual override wins
-    // 2) else if length/width available -> 2(L+W)
-    // 3) else sqrt(area)*4 (square assumption)
-    let perimLF = 0;
-    if (perimOverride > 0) perimLF = perimOverride;
-    else if (lenFt > 0 && widFt > 0) perimLF = 2 * (lenFt + widFt);
-    else if (floorSF > 0) perimLF = Math.sqrt(floorSF) * 4;
-
-    const wallSF = perimLF * ceilFt;
-    const paintSF = wallSF + floorSF; // walls + ceiling (area)
-
-    $("outPerimLF").textContent = floorSF > 0 ? fmtNum(perimLF, 1) : "—";
-    $("outWallSF").textContent = floorSF > 0 ? fmtNum(wallSF, 0) : "—";
-    $("outPaintSF").textContent = floorSF > 0 ? fmtNum(paintSF, 0) : "—";
-
-    return { floorSF, ceilFt, lenFt, widFt, perimLF, wallSF, paintSF };
-  }
-
-  function qtyForItem(item, geo) {
-    // Unit-driven quantities
-    const unit = item.unit;
-
-    // Scope overrides (for EACH/LF typically)
-    const s = state.scope[item.id];
-    const hasOverrideQty = s && typeof s.qty === "number" && Number.isFinite(s.qty);
-
-    if (unit === "EACH") {
-      return hasOverrideQty ? s.qty : (parseNum(item.default_qty) || 0);
-    }
-
-    if (unit === "LF") {
-      // allow override for LF too
-      return hasOverrideQty ? s.qty : geo.perimLF;
-    }
-
-    if (unit === "FLOOR_SF") return geo.floorSF;
-    if (unit === "WALL_SF") return geo.wallSF;
-    if (unit === "PAINT_SF") return geo.paintSF;
-
-    // fallback
-    return hasOverrideQty ? s.qty : 0;
-  }
-
-  function ensureScopeDefaults() {
-    for (const item of DATA.items) {
-      if (!state.scope[item.id]) {
-        state.scope[item.id] = {
-          on: !!item.default_on,
-          qty: (typeof item.default_qty === "number") ? item.default_qty : null
-        };
-      } else {
-        // make sure existing has on
-        if (typeof state.scope[item.id].on !== "boolean") state.scope[item.id].on = !!item.default_on;
-        if (!("qty" in state.scope[item.id])) state.scope[item.id].qty = null;
-      }
-    }
-  }
-
-  function renderScopeList() {
-    const wrap = $("scopeList");
-    wrap.innerHTML = "";
-
-    // group by category (optional)
-    const groups = new Map();
-    for (const it of DATA.items) {
-      const cat = it.category || "Scope";
-      if (!groups.has(cat)) groups.set(cat, []);
-      groups.get(cat).push(it);
-    }
-
-    for (const [cat, items] of groups.entries()) {
-      const h = document.createElement("div");
-      h.className = "groupTitle";
-      h.textContent = cat;
-      wrap.appendChild(h);
-
-      for (const it of items) {
-        const row = document.createElement("div");
-        row.className = "chk";
-
-        const s = state.scope[it.id] || { on: !!it.default_on, qty: it.default_qty ?? null };
-
-        const left = document.createElement("label");
-        left.className = "chkLeft";
-        left.innerHTML = `
-          <input type="checkbox" ${s.on ? "checked" : ""} data-id="${it.id}">
-          <div>
-            <b>${escapeHtml(it.label)}</b>
-            <small>${escapeHtml(it.unit)} • mat ${fmtMoney(it.material_rate)} • labor ${fmtMoney(it.labor_rate)}</small>
-          </div>
-        `;
-
-        const right = document.createElement("div");
-        right.className = "chkRight";
-
-        // Qty input only for EACH/LF (because SF ones are auto-calc)
-        if (it.unit === "EACH" || it.unit === "LF") {
-          const val = (typeof s.qty === "number" && Number.isFinite(s.qty)) ? String(s.qty) : "";
-          right.innerHTML = `
-            <div class="qtybox">
-              <span class="qtylbl">Qty</span>
-              <input class="qtyin" type="number" inputmode="decimal" step="0.1" data-qty="${it.id}" placeholder="${it.unit === "EACH" ? "0" : "auto"}" value="${val}">
-            </div>
-          `;
-        } else {
-          right.innerHTML = `<div class="qtybox ghost">auto</div>`;
-        }
-
-        row.appendChild(left);
-        row.appendChild(right);
-        wrap.appendChild(row);
-      }
-    }
-
-    // bind events
-    wrap.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => {
-      cb.addEventListener("change", (e) => {
-        const id = e.target.getAttribute("data-id");
-        state.scope[id] = state.scope[id] || {};
-        state.scope[id].on = e.target.checked;
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = isEnabled(it);
+      cb.addEventListener("change", ()=>{
+        STATE.enabled[it.id] = cb.checked;
         saveState();
         recalcAndRender();
       });
-    });
 
-    wrap.querySelectorAll('input[data-qty]').forEach(inp => {
-      inp.addEventListener("input", (e) => {
-        const id = e.target.getAttribute("data-qty");
-        const v = parseNum(e.target.value);
-        state.scope[id] = state.scope[id] || {};
-        // allow blank => null
-        if (String(e.target.value).trim() === "") state.scope[id].qty = null;
-        else state.scope[id].qty = v;
-        saveState();
-        recalcAndRender();
-      });
-    });
-  }
+      const meta = document.createElement("div");
+      const title = document.createElement("b");
+      title.textContent = it.label;
 
-  function renderRatesTable() {
-    const body = $("ratesBody");
-    body.innerHTML = "";
+      const small = document.createElement("small");
+      if(it.unit === "PCT_MAT"){
+        small.textContent = `${it.unit} • material ${Math.round(it.material_rate*100)}%`;
+      }else{
+        small.textContent = `${it.unit} • material ${num(it.material_rate)} • labor ${num(it.labor_rate)}`;
+      }
 
-    for (const it of DATA.items) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="left">${escapeHtml(it.label)}</td>
-        <td>${escapeHtml(it.unit)}</td>
-        <td>${fmtMoney(it.material_rate)}</td>
-        <td>${fmtMoney(it.labor_rate)}</td>
-      `;
-      body.appendChild(tr);
-    }
-  }
+      meta.appendChild(title);
+      meta.appendChild(small);
 
-  function buildQuoteRows(geo) {
-    const rows = [];
-    let rawSubtotal = 0;
-    let matSubtotal = 0;
-    let labSubtotal = 0;
+      row.appendChild(cb);
+      row.appendChild(meta);
 
-    for (const it of DATA.items) {
-      const s = state.scope[it.id];
-      const on = s ? !!s.on : !!it.default_on;
-      if (!on) continue;
-
-      const qty = qtyForItem(it, geo);
-      const mat = qty * (parseNum(it.material_rate) || 0);
-      const lab = qty * (parseNum(it.labor_rate) || 0);
-      const total = mat + lab;
-
-      rawSubtotal += total;
-      matSubtotal += mat;
-      labSubtotal += lab;
-
-      rows.push({ it, qty, mat, lab, total });
-    }
-
-    return { rows, rawSubtotal, matSubtotal, labSubtotal };
-  }
-
-  function recalcAndRender() {
-    if (!DATA) return;
-
-    // inputs persist
-    state.inputs.floorSF = $("inFloorSF").value;
-    state.inputs.ceilFt = $("inCeilFt").value;
-    state.inputs.lenFt = $("inLenFt").value;
-    state.inputs.widFt = $("inWidFt").value;
-    state.inputs.perimLF = $("inPerimLF").value;
-    saveState();
-
-    const geo = geometry();
-    const { rows, rawSubtotal, matSubtotal } = buildQuoteRows(geo);
-
-    // markup and tariff
-    const mkPct = getMarkupPct(geo.floorSF);
-    const mkAmt = rawSubtotal * mkPct;
-
-    // tariff is applied to MATERIAL subtotal only (clean + defensible)
-    const tfPct = getTariffPct();
-    const tfAmt = matSubtotal * tfPct;
-
-    const grand = rawSubtotal + mkAmt + tfAmt;
-
-    // banner
-    const tier = getMarkupTier(geo.floorSF);
-    const bannerLabel = state.admin.markupEnabled
-      ? (parseNum(state.admin.markupOverridePct) > 0 ? `${parseNum(state.admin.markupOverridePct)}% (override)` : `${tier.label} (by sqft)`)
-      : "OFF";
-
-    $("markupBanner").textContent = `Markup tier: ${bannerLabel}`;
-
-    // totals
-    $("rawSubtotal").textContent = fmtMoney(rawSubtotal);
-    $("markupApplied").textContent = state.admin.markupEnabled ? `${Math.round(mkPct * 100)}%` : "OFF";
-    $("tariffApplied").textContent = state.admin.tariffEnabled ? `${parseNum(state.admin.tariffPct)}%` : "OFF";
-    $("grandTotal").textContent = fmtMoney(grand);
-
-    // quote table
-    const qb = $("quoteBody");
-    qb.innerHTML = "";
-    for (const r of rows) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="left">${escapeHtml(r.it.label)}</td>
-        <td>${escapeHtml(r.it.unit)}</td>
-        <td>${fmtNum(r.qty, r.it.unit === "EACH" ? 0 : 1)}</td>
-        <td>${fmtMoney(r.mat)}</td>
-        <td>${fmtMoney(r.lab)}</td>
-        <td>${fmtMoney(r.total)}</td>
-      `;
-      qb.appendChild(tr);
-    }
-  }
-
-  function bindTabs() {
-    document.querySelectorAll(".tab").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-        btn.classList.add("active");
-        const tab = btn.getAttribute("data-tab");
-        $("tab-" + tab).classList.add("active");
-      });
-    });
-  }
-
-  function bindButtons() {
-    $("printBtn").addEventListener("click", () => window.print());
-    $("clearBtn").addEventListener("click", hardReset);
-
-    $("adminApplyBtn").addEventListener("click", () => {
-      state.admin.markupEnabled = $("adminMarkupEnabled").value === "1";
-      state.admin.markupOverridePct = String($("adminMarkupOverride").value || "").trim();
-      state.admin.tariffEnabled = $("adminTariffEnabled").value === "1";
-      state.admin.tariffPct = String($("adminTariffPct").value || "").trim();
-
-      saveState();
-      recalcAndRender();
-      $("adminStateMsg").textContent = "Admin settings applied.";
-    });
-
-    $("adminResetBtn").addEventListener("click", () => {
-      state.admin.markupEnabled = true;
-      state.admin.markupOverridePct = "";
-      state.admin.tariffEnabled = false;
-      state.admin.tariffPct = "";
-      saveState();
-      recalcAndRender();
-      $("adminStateMsg").textContent = "Admin reset.";
-    });
-  }
-
-  function bindInputs() {
-    ["inFloorSF", "inCeilFt", "inLenFt", "inWidFt", "inPerimLF"].forEach(id => {
-      $(id).addEventListener("input", recalcAndRender);
-    });
-  }
-
-  function applyStateToInputs() {
-    $("inFloorSF").value = state.inputs.floorSF ?? "";
-    $("inCeilFt").value = state.inputs.ceilFt ?? "";
-    $("inLenFt").value = state.inputs.lenFt ?? "";
-    $("inWidFt").value = state.inputs.widFt ?? "";
-    $("inPerimLF").value = state.inputs.perimLF ?? "";
-  }
-
-  function applyStateToAdminUI() {
-    $("adminMarkupEnabled").value = state.admin.markupEnabled ? "1" : "0";
-    $("adminMarkupOverride").value = state.admin.markupOverridePct ?? "";
-    $("adminTariffEnabled").value = state.admin.tariffEnabled ? "1" : "0";
-    $("adminTariffPct").value = state.admin.tariffPct ?? "";
-  }
-
-  function bindAdminUnlock() {
-    const logo = $("companyLogo");
-    let timer = null;
-
-    const start = () => {
-      timer = setTimeout(() => {
-        const pin = prompt("Enter Admin PIN");
-        if (pin === String(DATA.settings.admin.pin)) {
-          state.admin.unlocked = true;
-          $("adminPanel").classList.remove("hidden");
+      // qty input for EACH items except plumbing supplies (auto)
+      if(it.unit==="EACH" && it.id!=="plumbing_supplies_allowance_each_fixture"){
+        const qty = document.createElement("input");
+        qty.type="number";
+        qty.inputMode="decimal";
+        qty.min="0";
+        qty.step="1";
+        qty.value = String(getEachQty(it));
+        qty.style.marginLeft="auto";
+        qty.style.width="92px";
+        qty.style.borderRadius="12px";
+        qty.style.border="1px solid var(--line)";
+        qty.style.background="rgba(0,0,0,.18)";
+        qty.style.color="var(--text)";
+        qty.style.padding="10px 10px";
+        qty.addEventListener("change", ()=>{
+          STATE.qty[it.id] = qty.value;
           saveState();
-          $("adminStateMsg").textContent = "Admin unlocked.";
-        } else {
-          alert("Wrong PIN");
-        }
-      }, 1200);
-    };
+          recalcAndRender();
+        });
+        row.appendChild(qty);
+      }
 
-    const stop = () => {
-      if (timer) clearTimeout(timer);
-      timer = null;
-    };
-
-    // iPhone + desktop
-    logo.addEventListener("touchstart", start, { passive: true });
-    logo.addEventListener("touchend", stop);
-    logo.addEventListener("touchcancel", stop);
-    logo.addEventListener("mousedown", start);
-    logo.addEventListener("mouseup", stop);
-    logo.addEventListener("mouseleave", stop);
+      wrap.appendChild(row);
+    }
   }
+}
 
-  function applyCompanyBrand() {
-    const c = DATA.settings.company;
-    $("companyName").textContent = c.name;
-    $("companyPhone").textContent = c.phone;
-    $("companyPhone").href = `tel:${c.phone}`;
-    $("companyEmail").textContent = c.email;
-    $("companyEmail").href = `mailto:${c.email}`;
-    $("companyLogo").src = c.logo;
+/* ------------------ UI: Rates table ------------------ */
+function renderRates(){
+  const body = $("#ratesBody");
+  body.innerHTML = "";
 
-    // show admin panel if already unlocked
-    if (state.admin.unlocked) $("adminPanel").classList.remove("hidden");
-  }
+  for(const it of DATA.items){
+    const tr = document.createElement("tr");
 
-  function escapeHtml(s) {
-    return String(s ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
+    const tdL = document.createElement("td");
+    tdL.className="left";
+    tdL.textContent = it.label;
 
-  async function boot() {
-    loadState();
+    const tdU = document.createElement("td");
+    tdU.textContent = it.unit;
 
-    try {
-      const res = await fetch(`data.json?v=${VERSION}`, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      if (!json || !Array.isArray(json.items)) throw new Error("Invalid data.json structure");
-      DATA = json;
-    } catch (e) {
-      showFatal(`ERROR: data.json failed to load/parse. Check filename is EXACTLY "data.json" and valid JSON.\n\n${String(e)}`);
-      return;
+    const tdM = document.createElement("td");
+    const tdB = document.createElement("td");
+
+    if(it.unit==="PCT_MAT"){
+      tdM.textContent = `${Math.round(it.material_rate*100)}%`;
+      tdB.textContent = "—";
+    }else{
+      tdM.textContent = money(it.material_rate);
+      tdB.textContent = money(it.labor_rate);
     }
 
-    ensureScopeDefaults();
-    applyStateToInputs();
-    bindTabs();
-    bindButtons();
-    bindInputs();
+    tr.appendChild(tdL);
+    tr.appendChild(tdU);
+    tr.appendChild(tdM);
+    tr.appendChild(tdB);
+    body.appendChild(tr);
+  }
+}
 
-    applyCompanyBrand();
-    applyStateToAdminUI();
-    bindAdminUnlock();
+/* ------------------ Quote engine ------------------ */
+function computeQuote(){
+  const geo = calcGeometry();
 
-    renderScopeList();
-    renderRatesTable();
-    recalcAndRender();
+  // show calculated geometry
+  $("#outPerimLF").textContent = geo.perimLF>0 ? num(geo.perimLF,2) : "—";
+  $("#outWallSF").textContent  = geo.wallSF>0 ? num(geo.wallSF,2) : "—";
+  $("#outPaintSF").textContent = geo.paintSF>0 ? num(geo.paintSF,2) : "—";
+
+  // build lines
+  const lines = DATA.items.map(it=>{
+    let qty = (it.unit==="EACH") ? getEachQty(it) : baseQtyForUnit(it.unit, geo);
+
+    // special autos start at 0 then filled after
+    if(it.id==="plumbing_supplies_allowance_each_fixture") qty = 0;
+    if(it.id==="job_consumables_fasteners_of_raw_materials") qty = 0;
+
+    return {
+      it,
+      enabled: isEnabled(it),
+      qty,
+      material: 0,
+      labor: 0,
+      total: 0
+    };
+  });
+
+  // --- Auto #1: plumbing supplies qty = total selected fixture qty ---
+  const fixtureIds = new Set(
+    DATA.items.filter(x => (x.category||"")==="Fixtures").map(x=>x.id)
+  );
+
+  const fixtureQtySum = lines
+    .filter(l => l.enabled && fixtureIds.has(l.it.id))
+    .reduce((sum,l)=> sum + (l.it.unit==="EACH" ? safeNum(l.qty) : 0), 0);
+
+  const plumbingSup = lines.find(l=>l.it.id==="plumbing_supplies_allowance_each_fixture");
+  if(plumbingSup){
+    plumbingSup.qty = fixtureQtySum; // KEY FIX
   }
 
-  document.addEventListener("DOMContentLoaded", boot);
-})();
+  // first pass: compute all enabled NON-PCT items
+  for(const l of lines){
+    if(!l.enabled) continue;
+    if(l.it.unit==="PCT_MAT") continue;
+
+    l.material = safeNum(l.it.material_rate) * safeNum(l.qty);
+    l.labor    = safeNum(l.it.labor_rate) * safeNum(l.qty);
+    l.total    = l.material + l.labor;
+  }
+
+  // --- Auto #2: consumables = % of RAW MATERIALS subtotal (excluding itself) ---
+  const cons = lines.find(l=>l.it.id==="job_consumables_fasteners_of_raw_materials");
+  if(cons && cons.enabled){
+    const rawMaterialsBase = lines
+      .filter(l => l.enabled && l.it.unit!=="PCT_MAT" && l.it.id!=="job_consumables_fasteners_of_raw_materials")
+      .reduce((sum,l)=> sum + safeNum(l.material), 0);
+
+    const pct = safeNum(cons.it.material_rate); // e.g. 0.05
+    cons.qty = 1;
+    cons.material = rawMaterialsBase * pct;
+    cons.labor = 0;
+    cons.total = cons.material;
+  }
+
+  const rawSubtotal = lines.filter(l=>l.enabled).reduce((s,l)=>s+safeNum(l.total),0);
+
+  const tierPct = tierMarkupPct(geo.floorSF);
+  const markupPct = effectiveMarkupPct(geo.floorSF);
+  const tariffPct = effectiveTariffPct();
+
+  const markupAmount = rawSubtotal * markupPct;
+  const afterMarkup = rawSubtotal + markupAmount;
+  const tariffAmount = afterMarkup * tariffPct;
+  const grandTotal = afterMarkup + tariffAmount;
+
+  // banner + pills
+  if(geo.floorSF>0){
+    $("#markupBanner").textContent = `Markup tier: ${Math.round(tierPct*100)}% (by sqft)`;
+  }else{
+    $("#markupBanner").textContent = `Markup tier: —`;
+  }
+
+  $("#rawSubtotal").textContent = money(rawSubtotal);
+  $("#markupApplied").textContent = markupPct>0 ? `${Math.round(markupPct*100)}%` : "OFF";
+  $("#tariffApplied").textContent = tariffPct>0 ? `${Math.round(tariffPct*100)}%` : "OFF";
+  $("#grandTotal").textContent = money(grandTotal);
+
+  return { geo, lines, rawSubtotal, grandTotal };
+}
+
+function renderQuoteTable(result){
+  const tbody = $("#quoteBody");
+  tbody.innerHTML = "";
+
+  const visible = result.lines.filter(l=>l.enabled);
+
+  for(const l of visible){
+    const tr = document.createElement("tr");
+
+    const tdItem = document.createElement("td");
+    tdItem.className="left";
+    tdItem.textContent = l.it.label;
+
+    const tdUnit = document.createElement("td");
+    tdUnit.textContent = l.it.unit;
+
+    const tdQty = document.createElement("td");
+    tdQty.textContent = (l.it.unit==="PCT_MAT") ? "—" : num(l.qty, l.it.unit==="EACH"?0:2);
+
+    const tdM = document.createElement("td");
+    tdM.textContent = money(l.material);
+
+    const tdL = document.createElement("td");
+    tdL.textContent = money(l.labor);
+
+    const tdT = document.createElement("td");
+    tdT.style.fontWeight="900";
+    tdT.textContent = money(l.total);
+
+    tr.appendChild(tdItem);
+    tr.appendChild(tdUnit);
+    tr.appendChild(tdQty);
+    tr.appendChild(tdM);
+    tr.appendChild(tdL);
+    tr.appendChild(tdT);
+
+    tbody.appendChild(tr);
+  }
+}
+
+/* ------------------ Admin (hidden) ------------------ */
+function applyAdminUI(){
+  const unlocked = !!STATE.admin.unlocked;
+  $("#adminPanel").classList.toggle("hidden", !unlocked);
+
+  $("#adminMarkupEnabled").value = STATE.admin.markupEnabled ? "1":"0";
+  $("#adminMarkupOverride").value = STATE.admin.markupOverridePct ?? "";
+  $("#adminTariffEnabled").value = STATE.admin.tariffEnabled ? "1":"0";
+  $("#adminTariffPct").value = STATE.admin.tariffPct ?? "";
+}
+
+function bindAdmin(){
+  const logo = $("#companyLogo");
+  let timer = null;
+
+  const start = ()=>{
+    timer = setTimeout(()=>{
+      const pin = prompt("Enter admin PIN");
+      if(pin === ADMIN_PIN){
+        STATE.admin.unlocked = true;
+        saveState();
+        applyAdminUI();
+        $("#adminStateMsg").textContent = "Admin unlocked.";
+      }else{
+        $("#adminStateMsg").textContent = "Wrong PIN.";
+      }
+    }, 1200);
+  };
+  const cancel = ()=>{
+    if(timer) clearTimeout(timer);
+    timer = null;
+  };
+
+  // touch + mouse
+  logo.addEventListener("touchstart", start, {passive:true});
+  logo.addEventListener("touchend", cancel);
+  logo.addEventListener("touchcancel", cancel);
+  logo.addEventListener("mousedown", start);
+  logo.addEventListener("mouseup", cancel);
+  logo.addEventListener("mouseleave", cancel);
+
+  $("#adminApplyBtn").addEventListener("click", ()=>{
+    STATE.admin.markupEnabled = $("#adminMarkupEnabled").value==="1";
+    STATE.admin.markupOverridePct = $("#adminMarkupOverride").value;
+    STATE.admin.tariffEnabled = $("#adminTariffEnabled").value==="1";
+    STATE.admin.tariffPct = $("#adminTariffPct").value;
+    saveState();
+    $("#adminStateMsg").textContent = "Admin settings applied.";
+    recalcAndRender();
+  });
+
+  $("#adminResetBtn").addEventListener("click", ()=>{
+    STATE.admin = defaultState().admin;
+    saveState();
+    applyAdminUI();
+    $("#adminStateMsg").textContent = "Admin reset.";
+    recalcAndRender();
+  });
+}
+
+/* ------------------ Bindings ------------------ */
+function bindTabs(){
+  $$(".tab").forEach(btn=>{
+    btn.addEventListener("click", ()=>setTab(btn.dataset.tab));
+  });
+}
+function bindInputs(){
+  ["#inFloorSF","#inCeilFt","#inLenFt","#inWidFt","#inPerimLF"].forEach(sel=>{
+    $(sel).addEventListener("input", ()=>{
+      // persist inputs
+      STATE.inputs.floorSF = $("#inFloorSF").value;
+      STATE.inputs.ceilFt  = $("#inCeilFt").value;
+      STATE.inputs.lenFt   = $("#inLenFt").value;
+      STATE.inputs.widFt   = $("#inWidFt").value;
+      STATE.inputs.perimLF = $("#inPerimLF").value;
+      saveState();
+      recalcAndRender();
+    });
+  });
+}
+function bindButtons(){
+  $("#printBtn").addEventListener("click", ()=>window.print());
+
+  $("#clearBtn").addEventListener("click", ()=>{
+    localStorage.removeItem(LS_KEY);
+    STATE = defaultState();
+    // reset inputs
+    $("#inFloorSF").value="";
+    $("#inCeilFt").value="8";
+    $("#inLenFt").value="";
+    $("#inWidFt").value="";
+    $("#inPerimLF").value="";
+    applyAdminUI();
+    initDefaults();
+    renderScopeList();
+    renderRates();
+    recalcAndRender();
+  });
+}
+
+function initDefaults(){
+  for(const it of DATA.items){
+    if(STATE.enabled[it.id] === undefined) STATE.enabled[it.id] = !!it.default_on;
+    if(it.unit==="EACH" && STATE.qty[it.id] === undefined){
+      STATE.qty[it.id] = (it.default_qty ?? 0);
+    }
+  }
+  saveState();
+}
+
+/* ------------------ Data load ------------------ */
+async function loadData(){
+  const res = await fetch(`data.json?v=${Date.now()}`, {cache:"no-store"});
+  if(!res.ok) throw new Error("Cannot load data.json");
+  return res.json();
+}
+function applyCompany(){
+  const c = DATA.settings.company;
+  $("#companyName").textContent = c.name;
+  $("#companyLogo").src = c.logo;
+  $("#companyPhone").textContent = `📞 ${c.phone}`;
+  $("#companyPhone").href = `tel:${String(c.phone).replace(/[^\d+]/g,"")}`;
+  $("#companyEmail").textContent = `✉️ ${c.email}`;
+  $("#companyEmail").href = `mailto:${c.email}`;
+}
+
+function recalcAndRender(){
+  const result = computeQuote();
+  renderQuoteTable(result);
+}
+
+async function init(){
+  DATA = await loadData();
+  applyCompany();
+
+  // restore inputs
+  $("#inFloorSF").value = STATE.inputs.floorSF;
+  $("#inCeilFt").value  = STATE.inputs.ceilFt || "8";
+  $("#inLenFt").value   = STATE.inputs.lenFt;
+  $("#inWidFt").value   = STATE.inputs.widFt;
+  $("#inPerimLF").value = STATE.inputs.perimLF;
+
+  initDefaults();
+
+  bindTabs();
+  bindInputs();
+  bindButtons();
+
+  applyAdminUI();
+  bindAdmin();
+
+  renderScopeList();
+  renderRates();
+  recalcAndRender();
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  init().catch(err=>{
+    alert(`Error loading app files: ${err.message}`);
+    console.error(err);
+  });
+});
