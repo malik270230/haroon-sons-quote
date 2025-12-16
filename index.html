@@ -16,7 +16,7 @@
         <div class="hero-mid">
           <h1 id="companyName">Haroon &amp; Sons Consulting Quote</h1>
           <div class="tagline">Fast estimate • Clear scope • Clean totals</div>
-          <div class="subline" id="markupBanner">Markup tier: —</div>
+          <div class="subline" id="markupBanner">Pricing tier: —</div>
         </div>
         <div class="hero-right">
           <a id="companyPhone" class="contact" href="#">📞</a>
@@ -87,8 +87,8 @@
 
       <div class="card">
         <h2>Scope toggles</h2>
+        <div class="hint">EACH items (doors/fixtures) have quantity boxes.</div>
         <div id="scopeList" class="checklist"></div>
-<div class="hint">Tip: “EACH” items have a Qty box. SF/LF items are auto-calculated.</div>
       </div>
 
       <div class="card admin hidden" id="adminPanel">
@@ -96,7 +96,7 @@
 
         <div class="grid">
           <label class="field">
-            <span>Markup Enabled</span>
+            <span>Per-Item Tier Enabled</span>
             <select id="adminMarkupEnabled">
               <option value="1">ON</option>
               <option value="0">OFF</option>
@@ -104,7 +104,7 @@
           </label>
 
           <label class="field">
-            <span>Markup Override % (blank = use tier)</span>
+            <span>Per-Item Override % (blank = tier)</span>
             <input id="adminMarkupOverride" type="number" inputmode="decimal" placeholder="e.g., 35" />
           </label>
 
@@ -137,9 +137,9 @@
     <section class="panel" id="tab-quote">
       <div class="card">
         <div class="totals">
-          <div class="pill">Raw Subtotal <b id="rawSubtotal">$0.00</b></div>
-          <div class="pill">Markup Applied <b id="markupApplied">—</b></div>
-          <div class="pill">Tariff Applied <b id="tariffApplied">—</b></div>
+          <div class="pill">Subtotal <b id="rawSubtotal">$0.00</b></div>
+          <div class="pill">Adjustments <b id="markupApplied">—</b></div>
+          <div class="pill">Tariff <b id="tariffApplied">—</b></div>
         </div>
 
         <div class="tablewrap">
@@ -157,7 +157,7 @@
             <tbody id="quoteBody"></tbody>
             <tfoot>
               <tr>
-                <td class="left" colspan="5">Total</td>
+                <td class="left" colspan="5">Estimated Total</td>
                 <td id="grandTotal">$0.00</td>
               </tr>
             </tfoot>
@@ -177,16 +177,20 @@
 
     <section class="panel" id="tab-rates">
       <div class="card">
-        <h2>Rates (raw)</h2>
-        <div class="hint">These are raw rates. Sqft markup + optional tariff are applied on the QUOTE tab.</div>
+        <h2>Rates</h2>
+        <div class="hint">
+          Raw = base rates. Adjusted = per-item tier rate used for estimates (hidden from customer PDF).
+        </div>
         <div class="tablewrap">
           <table class="tbl">
             <thead>
               <tr>
                 <th class="left">Item</th>
                 <th>Unit</th>
-                <th>Material Rate</th>
-                <th>Labor Rate</th>
+                <th>Raw Material</th>
+                <th>Raw Labor</th>
+                <th>Adjusted Material</th>
+                <th>Adjusted Labor</th>
               </tr>
             </thead>
             <tbody id="ratesBody"></tbody>
