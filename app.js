@@ -90,7 +90,7 @@ function load(){
 }
 
 async function loadData(){
-  const res = await fetch("data.json?v=77777", {cache:"no-store"});
+  const res = await fetch("./data.json?v=77777", {cache:"no-store"});
   if(!res.ok) throw new Error("Cannot load data.json");
   DATA = await res.json();
 }
