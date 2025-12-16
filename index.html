@@ -1,239 +1,54 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Haroon & Sons Consulting Quote</title>
-  <link rel="stylesheet" href="./styles.css?v=1" />
-</head>
-<body>
-  <div class="app">
-    <header class="header">
-      <div class="brand">
-        <img class="logo" src="./logo.png" alt="Haroon & Sons Consulting LLC logo" />
-        <div class="brandText">
-          <h1>Haroon &amp; Sons Consulting Quote</h1>
-          <p class="tagline">Fast estimate • Clear scope • Clean totals</p>
-          <div class="contact">
-            <a class="contactLink" href="tel:8482282528">📞 848-228-2528</a>
-            <a class="contactLink" href="mailto:Malik270230@gmail.com">✉️ Malik270230@gmail.com</a>
-          </div>
-        </div>
-      </div>
+Haroon & Sons Consulting Quote
 
-      <nav class="tabs no-print" id="tabs">
-        <button class="tab active" data-tab="input">INPUT</button>
-        <button class="tab" data-tab="rates">RATES</button>
-        <button class="tab" data-tab="quote">QUOTE</button>
-        <button class="tab" data-tab="settings">SETTINGS</button>
-      </nav>
-    </header>
+Fast estimate • Clear scope • Clean totals
+📞 848-228-2528 ✉️ Malik270230@gmail.com
+Input  Rates  Quote  Settings
+Project Inputs
 
-    <main class="main">
-      <!-- INPUT -->
-      <section class="panel" id="tab-input">
-        <h2>Project Inputs</h2>
+Project Geometry
 
-        <div class="card">
-          <h3>Project Geometry</h3>
+Project Area (SF)  
+Project Length (ft) (optional)  Project Width (ft) (optional)  
+Perimeter (LF) (optional override)  Ceiling Height (ft) 
+Perimeter LF
+—
+Wall SF
+—
+Paint/Drywall SF
+—
+Customer / Job Info (for PDF)
 
-          <div class="grid2">
-            <div class="field">
-              <label>Project Area (SF)</label>
-              <input id="areaSF" type="number" inputmode="decimal" placeholder="e.g., 1400" />
-            </div>
-          </div>
+Customer Name   Project Address  Notes (optional) 
+Calculate Quote  Print / Save PDF
+Tip: Enter Project Area (SF) OR Length & Width. Quote won’t calculate without area.
+▶ Scope Toggles
+▶ Fixture Counts (supply + install)
+▶ Doors (quantity)
+▶ Add-on Supply Lines
+Rates
 
-          <div class="grid2">
-            <div class="field">
-              <label>Project Length (ft) <span class="muted">(optional)</span></label>
-              <input id="lengthFt" type="number" inputmode="decimal" placeholder="e.g., 35" />
-            </div>
-            <div class="field">
-              <label>Project Width (ft) <span class="muted">(optional)</span></label>
-              <input id="widthFt" type="number" inputmode="decimal" placeholder="e.g., 40" />
-            </div>
-          </div>
+Edit base rates here to match your spreadsheet. Changes save to your browser (local storage).
+Reset Rates (from data.json)
+Quote
 
-          <div class="grid2">
-            <div class="field">
-              <label>Perimeter (LF) <span class="muted">(optional override)</span></label>
-              <input id="perimeterOverride" type="number" inputmode="decimal" placeholder="leave blank to auto-calc from L×W (or SF)" />
-            </div>
-            <div class="field">
-              <label>Ceiling Height (ft)</label>
-              <input id="heightFt" type="number" inputmode="decimal" />
-            </div>
-          </div>
+Quote Summary
 
-          <div class="grid3 summaryBoxes">
-            <div class="mini">
-              <div class="miniLabel">Perimeter LF</div>
-              <div class="miniValue" id="outPerimeter">—</div>
-            </div>
-            <div class="mini">
-              <div class="miniLabel">Wall SF</div>
-              <div class="miniValue" id="outWallSF">—</div>
-            </div>
-            <div class="mini">
-              <div class="miniLabel">Paint/Drywall SF</div>
-              <div class="miniValue" id="outPaintSF">—</div>
-            </div>
-          </div>
-        </div>
+Total Materials
+$0.00
+Total Labor
+$0.00
+Total
+$0.00
+Settings
 
-        <div class="card">
-          <h3>Customer / Job Info (for PDF)</h3>
-          <div class="grid2">
-            <div class="field">
-              <label>Customer Name</label>
-              <input id="custName" type="text" placeholder="Customer name" />
-            </div>
-            <div class="field">
-              <label>Project Address</label>
-              <input id="custAddress" type="text" placeholder="Street, City, State ZIP" />
-            </div>
-          </div>
-          <div class="field">
-            <label>Notes (optional)</label>
-            <textarea id="custNotes" rows="3" placeholder="Scope assumptions, exclusions, schedule notes..."></textarea>
-          </div>
+Markups
 
-          <div class="actions no-print">
-            <button class="btn primary" id="btnCalc">Calculate Quote</button>
-            <button class="btn" id="btnPrint">Print / Save PDF</button>
-          </div>
+Materials Markup  
+Example: 0.25 = 25%
+Labor Markup  
+Example: 0.35 = 35%
+ Save Settings  Reset Everything
+Upcoming (next version)
 
-          <div class="tip">
-            Tip: Enter Project Area (SF) or Length &amp; Width. Quote won’t calculate without area.
-          </div>
-        </div>
-
-        <div class="card">
-          <details open>
-            <summary class="summary">Scope Toggles</summary>
-            <div id="scopeList" class="list"></div>
-          </details>
-
-          <details>
-            <summary class="summary">Fixture Counts (supply + install)</summary>
-            <div id="fixtureList" class="list"></div>
-          </details>
-
-          <details>
-            <summary class="summary">Doors (quantity)</summary>
-            <div id="doorList" class="list"></div>
-          </details>
-
-          <details>
-            <summary class="summary">Add-on Supply Lines</summary>
-            <div id="addonList" class="list"></div>
-          </details>
-        </div>
-      </section>
-
-      <!-- RATES -->
-      <section class="panel hidden" id="tab-rates">
-        <h2>Rates</h2>
-        <div class="card">
-          <div class="ratesMeta" id="ratesMeta"></div>
-          <div class="tableWrap">
-            <table class="table" id="ratesTable">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Unit</th>
-                  <th class="right">Material Rate</th>
-                  <th class="right">Labor Rate</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- QUOTE -->
-      <section class="panel hidden" id="tab-quote">
-        <h2>Quote</h2>
-        <div class="card">
-          <h3>Quote Summary</h3>
-          <div class="muted" id="quoteMeta">Run Calculate Quote to generate.</div>
-          <div class="tableWrap">
-            <table class="table" id="quoteTable">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Unit</th>
-                  <th class="right">Units</th>
-                  <th class="right">Material (w/ markup)</th>
-                  <th class="right">Labor (w/ markup)</th>
-                  <th class="right">Sell Price</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-
-          <div class="totals">
-            <div class="totalBox">
-              <div class="totalLabel">Total Materials</div>
-              <div class="totalValue" id="totMat">$—</div>
-            </div>
-            <div class="totalBox">
-              <div class="totalLabel">Total Labor</div>
-              <div class="totalValue" id="totLab">$—</div>
-            </div>
-            <div class="totalBox">
-              <div class="totalLabel">TOTAL</div>
-              <div class="totalValue big" id="totAll">$—</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- SETTINGS -->
-      <section class="panel hidden" id="tab-settings">
-        <h2>Settings</h2>
-        <div class="card">
-          <h3>Markups</h3>
-          <div class="grid2">
-            <div class="field">
-              <label>Materials Markup %</label>
-              <input id="muMat" type="number" inputmode="decimal" step="0.01" />
-            </div>
-            <div class="field">
-              <label>Labor Markup %</label>
-              <input id="muLab" type="number" inputmode="decimal" step="0.01" />
-            </div>
-          </div>
-
-          <h3 style="margin-top:16px;">Service Types</h3>
-          <div class="muted">Optional: multiplier on final SELL price. Keep 1.00 if you don’t want it changing.</div>
-          <div class="grid2">
-            <div class="field">
-              <label>Handyman Multiplier</label>
-              <input id="multHandy" type="number" inputmode="decimal" step="0.01" />
-            </div>
-            <div class="field">
-              <label>Contractor Multiplier</label>
-              <input id="multContract" type="number" inputmode="decimal" step="0.01" />
-            </div>
-          </div>
-
-          <div class="actions no-print">
-            <button class="btn primary" id="btnSaveSettings">Save Settings</button>
-          </div>
-
-          <div class="tip">PDF printing is forced to light mode automatically.</div>
-        </div>
-      </section>
-    </main>
-
-    <!-- PRINT AREA (light mode only) -->
-    <section id="printArea" class="print-only"></section>
-  </div>
-
-  <script src="./app.js?v=1" defer></script>
-</body>
-</html>
+Project Mode toggle (Interior vs Deck vs Foundation) with deck boards (PT vs composite), stairs, railings, footings.
+True address autocomplete with Google Places API key (optional) or Mapbox.
