@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Haroon & Sons Consulting Quote</title>
+  <link rel="stylesheet" href="styles.css?v=77777" />
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div class="hero-card">
+        <div class="hero-left">
+          <img class="logo" src="logo.png" alt="Haroon & Sons Consulting LLC logo" />
+        </div>
+        <div class="hero-mid">
+          <h1 id="companyName">Haroon &amp; Sons Consulting Quote</h1>
+          <div class="tagline">Fast estimate • Clear scope • Clean totals</div>
+        </div>
+        <div class="hero-right">
+          <a id="companyPhone" class="contact" href="tel:8482282528">📞 848-228-2528</a>
+          <a id="companyEmail" class="contact" href="mailto:Malik270230@gmail.com">✉️ Malik270230@gmail.com</a>
+        </div>
+      </div>
+
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button class="tab active" data-tab="input">Input</button>
+        <button class="tab" data-tab="rates">Rates</button>
+        <button class="tab" data-tab="quote">Quote</button>
+        <button class="tab" data-tab="settings">Settings</button>
+      </nav>
+    </header>
+
+    <main class="content">
+      <!-- INPUT -->
+      <section class="panel active" id="tab-input">
+        <h2>Project Inputs</h2>
+
+        <div class="card">
+          <h3>Project Geometry</h3>
+
+          <div class="grid-1">
+            <label class="field">
+              <span>Project Area (SF)</span>
+              <input id="areaSF" type="number" min="0" step="1" placeholder="e.g., 1400" />
+            </label>
+          </div>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>Project Length (ft) <em>(optional)</em></span>
+              <input id="lenFT" type="number" min="0" step="0.1" placeholder="e.g., 35" />
+            </label>
+            <label class="field">
+              <span>Project Width (ft) <em>(optional)</em></span>
+              <input id="widFT" type="number" min="0" step="0.1" placeholder="e.g., 40" />
+            </label>
+          </div>
+
+          <div class="grid-1">
+            <label class="field">
+              <span>Perimeter (LF) <em>(optional override)</em></span>
+              <input id="perimLF" type="number" min="0" step="0.1" placeholder="leave blank to auto-calc from L×W or Area" />
+            </label>
+
+            <label class="field">
+              <span>Ceiling Height (ft)</span>
+              <input id="ceilFT" type="number" min="0" step="0.1" value="8" />
+            </label>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="k">Perimeter LF</div><div id="mPerim" class="v">—</div></div>
+            <div class="metric"><div class="k">Wall SF</div><div id="mWall" class="v">—</div></div>
+            <div class="metric"><div class="k">Paint/Drywall SF</div><div id="mPaint" class="v">—</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Customer / Job Info (for PDF)</h3>
+          <div class="grid-1">
+            <label class="field">
+              <span>Customer Name</span>
+              <input id="custName" type="text" placeholder="Customer name" />
+            </label>
+            <label class="field">
+              <span>Project Address</span>
+              <input id="projAddr" type="text" placeholder="Start typing… (autocomplete)" autocomplete="off" list="addrList" />
+              <datalist id="addrList"></datalist>
+            </label>
+            <label class="field">
+              <span>Notes (optional)</span>
+              <textarea id="notes" rows="3" placeholder="Scope assumptions, exclusions, schedule notes…"></textarea>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="btnCalc" class="btn primary">Calculate Quote</button>
+            <button id="btnPrint" class="btn">Print / Save PDF</button>
+          </div>
+
+          <div class="hint">
+            Tip: Enter Project Area (SF) OR Length &amp; Width. Quote won’t calculate without area.
+          </div>
+        </div>
+
+        <div class="card accordion">
+          <button class="acc-head" data-acc="scope" aria-expanded="true">▶ Scope Toggles</button>
+          <div class="acc-body open" id="acc-scope"></div>
+        </div>
+
+        <div class="card accordion">
+          <button class="acc-head" data-acc="fixtures" aria-expanded="false">▶ Fixture Counts (supply + install)</button>
+          <div class="acc-body" id="acc-fixtures"></div>
+        </div>
+
+        <div class="card accordion">
+          <button class="acc-head" data-acc="doors" aria-expanded="false">▶ Doors (quantity)</button>
+          <div class="acc-body" id="acc-doors"></div>
+        </div>
+
+        <div class="card accordion">
+          <button class="acc-head" data-acc="addons" aria-expanded="false">▶ Add-on Supply Lines</button>
+          <div class="acc-body" id="acc-addons"></div>
+        </div>
+      </section>
+
+      <!-- RATES -->
+      <section class="panel" id="tab-rates">
+        <h2>Rates</h2>
+        <div class="card">
+          <div class="small">Edit base rates here to match your spreadsheet. Changes save to your browser (local storage).</div>
+          <div id="ratesTable" class="table-wrap"></div>
+          <div class="actions">
+            <button id="btnResetRates" class="btn">Reset Rates (from data.json)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUOTE -->
+      <section class="panel" id="tab-quote">
+        <h2>Quote</h2>
+
+        <div class="card">
+          <h3>Quote Summary</h3>
+          <div id="quoteMeta" class="meta"></div>
+          <div id="quoteTable" class="table-wrap"></div>
+
+          <div class="totals">
+            <div class="total-card">
+              <div class="t">Total Materials</div>
+              <div id="tMaterials" class="n">$0.00</div>
+            </div>
+            <div class="total-card">
+              <div class="t">Total Labor</div>
+              <div id="tLabor" class="n">$0.00</div>
+            </div>
+            <div class="total-card emph">
+              <div class="t">Total</div>
+              <div id="tGrand" class="n">$0.00</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="panel" id="tab-settings">
+        <h2>Settings</h2>
+        <div class="card">
+          <h3>Markups</h3>
+          <div class="grid-2">
+            <label class="field">
+              <span>Materials Markup</span>
+              <input id="muMat" type="number" step="0.01" min="0" />
+              <div class="tiny">Example: 0.25 = 25%</div>
+            </label>
+            <label class="field">
+              <span>Labor Markup</span>
+              <input id="muLab" type="number" step="0.01" min="0" />
+              <div class="tiny">Example: 0.35 = 35%</div>
+            </label>
+          </div>
+          <div class="actions">
+            <button id="btnSaveSettings" class="btn primary">Save Settings</button>
+            <button id="btnResetAll" class="btn">Reset Everything</button>
+          </div>
+
+          <hr class="sep" />
+
+          <h3>Upcoming (next version)</h3>
+          <ul class="bullets">
+            <li><b>Project Mode</b> toggle (Interior vs Deck vs Foundation) with deck boards (PT vs composite), stairs, railings, footings.</li>
+            <li><b>True address autocomplete</b> with Google Places API key (optional) or Mapbox.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="app.js?v=77777"></script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+{
+  "settings": {
+    "company": {
+      "name": "Haroon & Sons Consulting Quote",
+      "phone": "848-228-2528",
+      "email": "Malik270230@gmail.com",
+      "logo": "logo.png"
+    },
+    "markups": {
+      "materials": 0.25,
+      "labor": 0.35
+    },
+    "labor_base_rate": 75.0,
+    "defaults": {
+      "projectArea": null,
+      "ceilingHeight": 8.0
+    }
+  },
+  "items": [
+    {
+      "id": "framing_walls",
+      "label": "Framing (walls)",
+      "unit": "WALL_SF",
+      "material_rate": 2.25,
+      "labor_rate": 3.0,
+      "category": "Scope",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Units = INPUT!B11"
+    },
+    {
+      "id": "electrical_whole_basement",
+      "label": "Electrical (whole basement)",
+      "unit": "FLOOR_SF",
+      "material_rate": 2.75,
+      "labor_rate": 4.75,
+      "category": "Scope",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Whole basement wiring. Units = INPUT!B9"
+    },
+    {
+      "id": "subpanel_100a_add_on",
+      "label": "Subpanel 100A (add-on)",
+      "unit": "EACH",
+      "material_rate": 650.0,
+      "labor_rate": 950.0,
+      "category": "Scope",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "100A subpanel ~10 ft baseline"
+    },
+    {
+      "id": "insulation_walls",
+      "label": "Insulation (walls)",
+      "unit": "WALL_SF",
+      "material_rate": 1.0,
+      "labor_rate": 1.25,
+      "category": "Scope",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Units = INPUT!B11"
+    },
+    {
+      "id": "drywall_hang_walls_ceiling",
+      "label": "Drywall Hang (walls+ceiling)",
+      "unit": "PAINT_SF",
+      "material_rate": 1.6,
+      "labor_rate": 2.4,
+      "category": "Scope",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Units = INPUT!B12"
+    },
+    {
+      "id": "drywall_finish_taping_walls_ceiling",
+      "label": "Drywall Finish/Taping (walls+ceiling)",
+      "unit": "PAINT_SF",
+      "material_rate": 0.4,
+      "labor_rate": 1.95,
+      "category": "Other",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Units = INPUT!B12"
+    },
+    {
+      "id": "painting_walls_ceiling",
+      "label": "Painting (walls+ceiling)",
+      "unit": "PAINT_SF",
+      "material_rate": 1.05,
+      "labor_rate": 1.75,
+      "category": "Scope",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Primer + 2 coats. Units = INPUT!B12"
+    },
+    {
+      "id": "flooring_entire_floor",
+      "label": "Flooring (entire floor)",
+      "unit": "FLOOR_SF",
+      "material_rate": 4.25,
+      "labor_rate": 3.0,
+      "category": "Scope",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Default LVP supply+install cost"
+    },
+    {
+      "id": "base_molding_lf",
+      "label": "Base Molding (LF)",
+      "unit": "LF",
+      "material_rate": 1.4,
+      "labor_rate": 2.2,
+      "category": "Other",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Units = INPUT!B13"
+    },
+    {
+      "id": "plumbing_toilet_each",
+      "label": "Plumbing: Toilet (each)",
+      "unit": "EACH",
+      "material_rate": 320.0,
+      "labor_rate": 450.0,
+      "category": "Fixtures",
+      "default_on": true,
+      "default_qty": 1.0,
+      "notes": "Supply + install"
+    },
+    {
+      "id": "plumbing_vanity_faucet_each",
+      "label": "Plumbing: Vanity + Faucet (each)",
+      "unit": "EACH",
+      "material_rate": 750.0,
+      "labor_rate": 525.0,
+      "category": "Fixtures",
+      "default_on": true,
+      "default_qty": 1.0,
+      "notes": "Supply + install"
+    },
+    {
+      "id": "plumbing_shower_package_each",
+      "label": "Plumbing: Shower package (each)",
+      "unit": "EACH",
+      "material_rate": 900.0,
+      "labor_rate": 950.0,
+      "category": "Fixtures",
+      "default_on": true,
+      "default_qty": 1.0,
+      "notes": "Valve+trim+drain+connections"
+    },
+    {
+      "id": "plumbing_kitchen_sink_faucet_each",
+      "label": "Plumbing: Kitchen sink + faucet (each)",
+      "unit": "EACH",
+      "material_rate": 600.0,
+      "labor_rate": 525.0,
+      "category": "Fixtures",
+      "default_on": true,
+      "default_qty": 1.0,
+      "notes": "Supply + install"
+    },
+    {
+      "id": "plumbing_dishwasher_each",
+      "label": "Plumbing: Dishwasher (each)",
+      "unit": "EACH",
+      "material_rate": 650.0,
+      "labor_rate": 350.0,
+      "category": "Fixtures",
+      "default_on": true,
+      "default_qty": 1.0,
+      "notes": "Supply + install"
+    },
+    {
+      "id": "plumbing_ice_maker_line_each",
+      "label": "Plumbing: Ice maker line (each)",
+      "unit": "EACH",
+      "material_rate": 120.0,
+      "labor_rate": 200.0,
+      "category": "Fixtures",
+      "default_on": true,
+      "default_qty": 0.0,
+      "notes": "Supply + install"
+    },
+    {
+      "id": "plumbing_bar_sink_faucet_each",
+      "label": "Plumbing: Bar sink + faucet (each)",
+      "unit": "EACH",
+      "material_rate": 450.0,
+      "labor_rate": 525.0,
+      "category": "Fixtures",
+      "default_on": true,
+      "default_qty": 0.0,
+      "notes": "Supply + install"
+    },
+    {
+      "id": "upflush_ejector_system_each",
+      "label": "Upflush / Ejector system (each)",
+      "unit": "EACH",
+      "material_rate": 1500.0,
+      "labor_rate": 1350.0,
+      "category": "Fixtures",
+      "default_on": true,
+      "default_qty": 1.0,
+      "notes": "Supply + install baseline"
+    },
+    {
+      "id": "door_interior_hollow_core_each",
+      "label": "Door: Interior Hollow Core (each)",
+      "unit": "EACH",
+      "material_rate": 170.0,
+      "labor_rate": 225.0,
+      "category": "Doors",
+      "default_on": true,
+      "default_qty": 9.0,
+      "notes": "Door + casing supply; hang + case labor"
+    },
+    {
+      "id": "door_interior_solid_core_each",
+      "label": "Door: Interior Solid Core (each)",
+      "unit": "EACH",
+      "material_rate": 280.0,
+      "labor_rate": 275.0,
+      "category": "Doors",
+      "default_on": true,
+      "default_qty": 1.0,
+      "notes": "Door + casing supply; hang + case labor"
+    },
+    {
+      "id": "door_closet_each",
+      "label": "Door: Closet (each)",
+      "unit": "EACH",
+      "material_rate": 200.0,
+      "labor_rate": 175.0,
+      "category": "Doors",
+      "default_on": true,
+      "default_qty": 6.0,
+      "notes": "Supply + install"
+    },
+    {
+      "id": "door_hardware_allowance_each",
+      "label": "Door Hardware Allowance (each)",
+      "unit": "EACH",
+      "material_rate": 45.0,
+      "labor_rate": 0.0,
+      "category": "Add-ons",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Knob/lever + misc per door"
+    },
+    {
+      "id": "door_casing_lf",
+      "label": "Door Casing (LF)",
+      "unit": "LF",
+      "material_rate": 1.6,
+      "labor_rate": 2.4,
+      "category": "Add-ons",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Casing supply+install per LF (auto from doors)"
+    },
+    {
+      "id": "shoe_molding_lf",
+      "label": "Shoe Molding (LF)",
+      "unit": "LF",
+      "material_rate": 0.9,
+      "labor_rate": 1.6,
+      "category": "Add-ons",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Shoe / quarter round per LF"
+    },
+    {
+      "id": "drywall_supplies_paint_sf",
+      "label": "Drywall Supplies (PAINT_SF)",
+      "unit": "PAINT_SF",
+      "material_rate": 0.45,
+      "labor_rate": 0.15,
+      "category": "Add-ons",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Tape, mud, beads, screws per SF"
+    },
+    {
+      "id": "paint_supplies_paint_sf",
+      "label": "Paint Supplies (PAINT_SF)",
+      "unit": "PAINT_SF",
+      "material_rate": 0.25,
+      "labor_rate": 0.05,
+      "category": "Add-ons",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Tape, plastic, rollers, caulk per SF"
+    },
+    {
+      "id": "electrical_supplies_floor_sf",
+      "label": "Electrical Supplies (FLOOR_SF)",
+      "unit": "FLOOR_SF",
+      "material_rate": 0.85,
+      "labor_rate": 0.1,
+      "category": "Add-ons",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Plates, staples, connectors per SF"
+    },
+    {
+      "id": "plumbing_supplies_allowance_each_fixture",
+      "label": "Plumbing Supplies Allowance (each fixture)",
+      "unit": "EACH",
+      "material_rate": 160.0,
+      "labor_rate": 0.0,
+      "category": "Add-ons",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "Stops, traps, fittings per fixture"
+    },
+    {
+      "id": "job_consumables_fasteners_of_raw_materials",
+      "label": "Job Consumables & Fasteners (% of raw materials)",
+      "unit": "PCT_MAT",
+      "material_rate": 0.05,
+      "labor_rate": 0.0,
+      "category": "Add-ons",
+      "default_on": true,
+      "default_qty": null,
+      "notes": "5% of raw material subtotal (before markup)"
+    }
+  ]
+}
