@@ -1,53 +1,731 @@
-/* Haroon & Sons Consulting Quote
-   Option A PDF (summary-first), tiered markup by sqft,
-   admin override + tariff, fixed PCT_MAT + plumbing supplies,
-   FIX: Qty controls for EACH items (doors/dishwasher/sinks/etc)
+/* Haroon & Sons Consulting Quote — Option A
+   Fixes:
+   - EACH items have qty inputs (doors, dishwasher, sinks, etc)
+   - Plumbing Supplies Allowance qty = total selected plumbing fixtures qty
+   - Job Consumables qty = % of RAW MATERIAL subtotal
+   - Rates page shows Raw + Adjusted (per-item markup tier)
+   - Quote/PDF hide the words "markup" and "tariff" (admin still controls them)
 */
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-const LS_KEY = "haroon_sons_quote_state_vA";
+const LS_KEY = "haroon_sons_quote_v2_state";
+
+/** =========================
+ *  CONFIG / DEFAULTS
+ *  ========================= */
 const ADMIN_PIN = "0718"; // change if you want
 
-let DATA = null;
-
-const state = {
+const DEFAULT_STATE = {
   inputs: {
-    floorSF: null,
-    ceilFt: 8,
-    lenFt: null,
-    widFt: null,
-    perimOverride: null
+    floorSF: "",
+    ceilFt: "8",
+    lenFt: "",
+    widFt: "",
+    perimOverride: ""
   },
-  scopeOn: {},     // id => boolean
-  qtyEach: {},     // id => number (only for unit === EACH)
+  selections: {},       // id -> boolean
+  qty: {},              // id -> number (for EACH overrides)
   admin: {
-    unlocked: false,
-    markupEnabled: true,
-    markupOverridePct: null,
+    perItemEnabled: true,            // per-item tier markup enabled
+    perItemOverridePct: "",          // blank = tier
+    globalEnabled: false,            // global markup on subtotal
+    globalPct: "",                   // blank = 0
     tariffEnabled: false,
-    tariffPct: 0,
-    includeLineItemsOnPDF: true
+    tariffPct: "",                   // blank = 0
   }
 };
 
-function num(v) {
-  const n = parseFloat(v);
-  return Number.isFinite(n) ? n : null;
+let DATA = null;
+let STATE = loadState();
+
+/** =========================
+ *  LOAD DATA.JSON
+ *  ========================= */
+async function loadData() {
+  // cache-bust using current URL param v= or fallback timestamp
+  const url = new URL(location.href);
+  const v = url.searchParams.get("v") || String(Date.now());
+  const res = await fetch(`data.json?v=${encodeURIComponent(v)}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Cannot load data.json");
+  const json = await res.json();
+  return json;
 }
-function money(n) {
-  const x = Number.isFinite(n) ? n : 0;
+
+/** =========================
+ *  STATE
+ *  ========================= */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+    // merge shallowly with defaults (so new fields appear)
+    return {
+      ...structuredClone(DEFAULT_STATE),
+      ...parsed,
+      inputs: { ...structuredClone(DEFAULT_STATE.inputs), ...(parsed.inputs || {}) },
+      selections: { ...(parsed.selections || {}) },
+      qty: { ...(parsed.qty || {}) },
+      admin: { ...structuredClone(DEFAULT_STATE.admin), ...(parsed.admin || {}) }
+    };
+  } catch {
+    return structuredClone(DEFAULT_STATE);
+  }
+}
+
+function saveState() {
+  localStorage.setItem(LS_KEY, JSON.stringify(STATE));
+}
+
+/** =========================
+ *  HELPERS
+ *  ========================= */
+const fmtMoney = (n) => {
+  const x = Number(n || 0);
   return x.toLocaleString(undefined, { style: "currency", currency: "USD" });
+};
+const fmtNum = (n) => {
+  const x = Number(n || 0);
+  return x.toLocaleString(undefined, { maximumFractionDigits: 2 });
+};
+const toNum = (v) => {
+  const x = Number(v);
+  return Number.isFinite(x) ? x : 0;
+};
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+function currentTierPct(floorSF) {
+  const tiers = (DATA?.settings?.markupTiers || []);
+  for (const t of tiers) {
+    if (floorSF <= t.maxSF) return toNum(t.pct);
+  }
+  return 0;
 }
-function round2(n) {
-  return Math.round((n + Number.EPSILON) * 100) / 100;
+
+function adminPerItemPct(floorSF) {
+  if (!STATE.admin.perItemEnabled) return 0;
+  const ov = String(STATE.admin.perItemOverridePct || "").trim();
+  if (ov !== "") return clamp(toNum(ov) / 100, 0, 5);
+  return currentTierPct(floorSF);
 }
-function clamp(n, a, b) {
-  return Math.max(a, Math.min(b, n));
+
+function adminGlobalPct() {
+  if (!STATE.admin.globalEnabled) return 0;
+  const ov = String(STATE.admin.globalPct || "").trim();
+  if (ov === "") return 0;
+  return clamp(toNum(ov) / 100, 0, 5);
 }
+
+function adminTariffPct() {
+  if (!STATE.admin.tariffEnabled) return 0;
+  const ov = String(STATE.admin.tariffPct || "").trim();
+  if (ov === "") return 0;
+  return clamp(toNum(ov) / 100, 0, 5);
+}
+
+/** =========================
+ *  GEOMETRY CALCS
+ *  ========================= */
+function calcGeometry() {
+  const floorSF = toNum(STATE.inputs.floorSF);
+  const ceilFt = toNum(STATE.inputs.ceilFt) || 8;
+  const lenFt = toNum(STATE.inputs.lenFt);
+  const widFt = toNum(STATE.inputs.widFt);
+  const perimOverride = toNum(STATE.inputs.perimOverride);
+
+  // If user provides perimeter override, use it.
+  // Else if length/width provided, perimeter = 2(L+W).
+  // Else assume square-ish: side = sqrt(area), perimeter = 4*side.
+  let perimLF = 0;
+  if (perimOverride > 0) perimLF = perimOverride;
+  else if (lenFt > 0 && widFt > 0) perimLF = 2 * (lenFt + widFt);
+  else if (floorSF > 0) perimLF = 4 * Math.sqrt(floorSF);
+
+  const wallSF = perimLF * ceilFt;
+  const paintSF = wallSF + floorSF;
+
+  return { floorSF, ceilFt, perimLF, wallSF, paintSF };
+}
+
+/** =========================
+ *  SPECIAL QUANTITY RULES
+ *  ========================= */
+function isSelected(item) {
+  const v = STATE.selections[item.id];
+  if (typeof v === "boolean") return v;
+  return !!item.default_on;
+}
+
+function getEachQty(item) {
+  // If user typed qty, use it, else default_qty, else 0
+  const q = STATE.qty[item.id];
+  if (q !== undefined && q !== null && q !== "") return Math.max(0, toNum(q));
+  if (item.default_qty !== undefined && item.default_qty !== null) return Math.max(0, toNum(item.default_qty));
+  return 0;
+}
+
+function countPlumbingFixtures() {
+  // plumbing fixtures = items with plumbing_fixture true (or category Fixtures) AND selected
+  let total = 0;
+  for (const it of DATA.items) {
+    const isFixture = !!it.plumbing_fixture || String(it.category || "").toLowerCase() === "fixtures";
+    if (!isFixture) continue;
+    if (!isSelected(it)) continue;
+    if (it.unit === "EACH") total += getEachQty(it);
+  }
+  return total;
+}
+
+function countDoors() {
+  let total = 0;
+  for (const it of DATA.items) {
+    const isDoor = String(it.category || "").toLowerCase() === "doors" || String(it.id).startsWith("door_");
+    if (!isDoor) continue;
+    if (!isSelected(it)) continue;
+    if (it.unit === "EACH") total += getEachQty(it);
+  }
+  return total;
+}
+
+function autoQtyForItem(item, geo) {
+  const { floorSF, wallSF, paintSF, perimLF } = geo;
+
+  switch (item.unit) {
+    case "FLOOR_SF": return floorSF;
+    case "WALL_SF":  return wallSF;
+    case "PAINT_SF": return paintSF;
+    case "LF":       return perimLF;
+    case "EACH":     return getEachQty(item);
+    case "PCT_MAT":  return null; // computed later
+    default:         return 0;
+  }
+}
+
+/** =========================
+ *  LINE CALCS
+ *  ========================= */
+function computeQuote() {
+  const geo = calcGeometry();
+  const perItemPct = adminPerItemPct(geo.floorSF);
+
+  // First pass: compute raw material subtotal for consumables %
+  let rawMaterialSubtotal = 0;
+
+  // We also need door casing LF if present and you want it driven from door count.
+  // If data.json includes "door_casing_lf", we auto-calc as 17 LF per door (avg).
+  const doorCount = countDoors();
+  const plumbingFixtureCount = countPlumbingFixtures();
+
+  // Build lines
+  const lines = [];
+
+  for (const item of DATA.items) {
+    if (!isSelected(item)) continue;
+
+    // Determine qty
+    let qty = autoQtyForItem(item, geo);
+
+    // Door casing special: auto from door count unless user overrides by typing qty (we allow override via qty map)
+    if (item.id === "door_casing_lf") {
+      // if user manually typed a qty override in STATE.qty (yes, even though LF), respect it
+      const typed = STATE.qty[item.id];
+      if (typed !== undefined && typed !== null && typed !== "") qty = Math.max(0, toNum(typed));
+      else qty = doorCount * 17; // average casing per door opening
+    }
+
+    // Shoe molding sometimes also used as perimeter — keep as LF (already)
+    // Plumbing supplies allowance: qty = plumbing fixtures count
+    if (item.id === "plumbing_supplies_allowance_each_fixture") {
+      qty = plumbingFixtureCount;
+    }
+
+    // Compute raw line
+    const rawMat = (item.unit === "PCT_MAT") ? 0 : (toNum(item.material_rate) * toNum(qty || 0));
+    const rawLab = (item.unit === "PCT_MAT") ? 0 : (toNum(item.labor_rate) * toNum(qty || 0));
+    rawMaterialSubtotal += rawMat;
+
+    lines.push({
+      item,
+      qty,
+      rawMat,
+      rawLab,
+      mat: 0,
+      lab: 0,
+      total: 0
+    });
+  }
+
+  // Second pass: apply special PCT_MAT (consumables) based on raw material subtotal
+  for (const ln of lines) {
+    if (ln.item.unit === "PCT_MAT") {
+      // material_rate is the percent (e.g., 0.05 = 5%)
+      ln.qty = "—";
+      ln.rawMat = rawMaterialSubtotal * toNum(ln.item.material_rate);
+      ln.rawLab = 0;
+    }
+  }
+
+  // Now apply per-item pct (hidden from customer, but used)
+  let subtotal = 0;
+  for (const ln of lines) {
+    const base = ln.rawMat + ln.rawLab;
+    const adjusted = base * (1 + perItemPct);
+
+    // Split proportionally back into mat/lab for display (customer just sees numbers)
+    if (base > 0) {
+      ln.mat = ln.rawMat * (adjusted / base);
+      ln.lab = ln.rawLab * (adjusted / base);
+    } else {
+      ln.mat = 0; ln.lab = 0;
+    }
+    ln.total = ln.mat + ln.lab;
+    subtotal += ln.total;
+  }
+
+  // Optional global + tariff
+  const gPct = adminGlobalPct();
+  const tPct = adminTariffPct();
+
+  let grand = subtotal;
+  if (gPct > 0) grand *= (1 + gPct);
+  if (tPct > 0) grand *= (1 + tPct);
+
+  return {
+    geo,
+    perItemPct,
+    globalPct: gPct,
+    tariffPct: tPct,
+    doorCount,
+    plumbingFixtureCount,
+    lines,
+    subtotal,
+    grand
+  };
+}
+
+/** =========================
+ *  RENDER UI
+ *  ========================= */
+function setTabs() {
+  $$(".tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $$(".tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const key = btn.dataset.tab;
+      $$(".panel").forEach(p => p.classList.remove("active"));
+      $(`#tab-${key}`).classList.add("active");
+    });
+  });
+}
+
+function renderHeader() {
+  const c = DATA.settings.company;
+  $("#companyName").textContent = c.name || "Haroon & Sons Consulting Quote";
+
+  const logo = $("#companyLogo");
+  logo.src = c.logo || "logo.png";
+
+  const phone = $("#companyPhone");
+  phone.textContent = `📞 ${c.phone || ""}`;
+  phone.href = c.phone ? `tel:${String(c.phone).replace(/[^\d+]/g, "")}` : "#";
+
+  const email = $("#companyEmail");
+  email.textContent = `✉️ ${c.email || ""}`;
+  email.href = c.email ? `mailto:${c.email}` : "#";
+
+  // Banner text (customer-safe): no "markup/tariff"
+  const geo = calcGeometry();
+  const tierPct = currentTierPct(geo.floorSF);
+  const tierTxt = geo.floorSF > 0 ? `${Math.round(tierPct * 100)}% (${fmtNum(geo.floorSF)} SF)` : "—";
+  $("#markupBanner").textContent = `Pricing tier: ${tierTxt}`;
+}
+
+function bindInputs() {
+  const map = [
+    ["#inFloorSF", "floorSF"],
+    ["#inCeilFt", "ceilFt"],
+    ["#inLenFt", "lenFt"],
+    ["#inWidFt", "widFt"],
+    ["#inPerimLF", "perimOverride"]
+  ];
+  map.forEach(([sel, key]) => {
+    const el = $(sel);
+    el.value = STATE.inputs[key] ?? "";
+    el.addEventListener("input", () => {
+      STATE.inputs[key] = el.value;
+      saveState();
+      updateAll();
+    });
+  });
+}
+
+function renderCalculated() {
+  const geo = calcGeometry();
+  $("#outPerimLF").textContent = geo.perimLF > 0 ? fmtNum(geo.perimLF) : "—";
+  $("#outWallSF").textContent = geo.wallSF > 0 ? fmtNum(geo.wallSF) : "—";
+  $("#outPaintSF").textContent = geo.paintSF > 0 ? fmtNum(geo.paintSF) : "—";
+}
+
+function renderScopeList() {
+  const box = $("#scopeList");
+  box.innerHTML = "";
+
+  // Group by category for readability
+  const groups = {};
+  for (const it of DATA.items) {
+    const cat = it.category || "Other";
+    groups[cat] = groups[cat] || [];
+    groups[cat].push(it);
+  }
+
+  const order = Object.keys(groups);
+  order.sort((a, b) => a.localeCompare(b));
+
+  for (const cat of order) {
+    const h = document.createElement("div");
+    h.className = "cat";
+    h.textContent = cat;
+    box.appendChild(h);
+
+    for (const it of groups[cat]) {
+      const row = document.createElement("label");
+      row.className = "chk";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = isSelected(it);
+      cb.addEventListener("change", () => {
+        STATE.selections[it.id] = cb.checked;
+        saveState();
+        updateAll();
+      });
+
+      const txt = document.createElement("div");
+      const b = document.createElement("b");
+      b.textContent = it.label;
+
+      const small = document.createElement("small");
+
+      // For EACH, show qty input
+      if (it.unit === "EACH") {
+        const qWrap = document.createElement("span");
+        qWrap.className = "qtywrap";
+
+        const q = document.createElement("input");
+        q.type = "number";
+        q.inputMode = "decimal";
+        q.min = "0";
+        q.step = "1";
+        q.className = "qty";
+        q.value = (STATE.qty[it.id] ?? it.default_qty ?? 0);
+        q.addEventListener("input", () => {
+          STATE.qty[it.id] = q.value;
+          saveState();
+          updateAll();
+        });
+
+        small.textContent = `${it.unit} • material ${fmtNum(it.material_rate)} • labor ${fmtNum(it.labor_rate)}`;
+        qWrap.appendChild(document.createTextNode("Qty "));
+        qWrap.appendChild(q);
+        small.appendChild(document.createTextNode("  "));
+        small.appendChild(qWrap);
+      } else if (it.id === "plumbing_supplies_allowance_each_fixture") {
+        small.textContent = `AUTO: qty = number of selected plumbing fixtures • EACH • material ${fmtNum(it.material_rate)}`;
+      } else if (it.unit === "PCT_MAT") {
+        small.textContent = `AUTO: ${Math.round(toNum(it.material_rate) * 100)}% of RAW MATERIAL subtotal`;
+      } else if (it.id === "door_casing_lf") {
+        small.textContent = `AUTO: LF from door count (17 LF/door) • material ${fmtNum(it.material_rate)} • labor ${fmtNum(it.labor_rate)}`;
+      } else {
+        small.textContent = `${it.unit} • material ${fmtNum(it.material_rate)} • labor ${fmtNum(it.labor_rate)}`;
+      }
+
+      txt.appendChild(b);
+      txt.appendChild(small);
+
+      row.appendChild(cb);
+      row.appendChild(txt);
+
+      box.appendChild(row);
+    }
+  }
+}
+
+function renderQuote() {
+  const q = computeQuote();
+
+  // Quote table rows
+  const body = $("#quoteBody");
+  body.innerHTML = "";
+
+  for (const ln of q.lines) {
+    const tr = document.createElement("tr");
+
+    const tdItem = document.createElement("td");
+    tdItem.className = "left";
+    tdItem.textContent = ln.item.label;
+
+    const tdUnit = document.createElement("td");
+    tdUnit.textContent = ln.item.unit;
+
+    const tdQty = document.createElement("td");
+    tdQty.textContent = (typeof ln.qty === "string") ? ln.qty : fmtNum(ln.qty);
+
+    const tdMat = document.createElement("td");
+    tdMat.textContent = fmtMoney(ln.mat);
+
+    const tdLab = document.createElement("td");
+    tdLab.textContent = fmtMoney(ln.lab);
+
+    const tdTot = document.createElement("td");
+    tdTot.textContent = fmtMoney(ln.total);
+
+    tr.append(tdItem, tdUnit, tdQty, tdMat, tdLab, tdTot);
+    body.appendChild(tr);
+  }
+
+  $("#grandTotal").textContent = fmtMoney(q.grand);
+
+  // Customer-safe summary (no "markup/tariff" wording)
+  $("#rawSubtotal").textContent = fmtMoney(q.subtotal);
+
+  // These fields exist in HTML, but we keep them neutral:
+  $("#markupApplied").textContent = "Included in item pricing";
+  $("#tariffApplied").textContent = (q.tariffPct > 0) ? "Included in total" : "OFF";
+}
+
+function renderRates() {
+  const geo = calcGeometry();
+  const perItemPct = adminPerItemPct(geo.floorSF);
+
+  const body = $("#ratesBody");
+  body.innerHTML = "";
+
+  for (const it of DATA.items) {
+    const tr = document.createElement("tr");
+
+    const tdItem = document.createElement("td");
+    tdItem.className = "left";
+    tdItem.textContent = it.label;
+
+    const tdUnit = document.createElement("td");
+    tdUnit.textContent = it.unit;
+
+    const rawMat = toNum(it.material_rate);
+    const rawLab = toNum(it.labor_rate);
+
+    const tdRawMat = document.createElement("td");
+    tdRawMat.textContent = fmtMoney(rawMat);
+
+    const tdRawLab = document.createElement("td");
+    tdRawLab.textContent = fmtMoney(rawLab);
+
+    // Adjusted per-item tier (Rates page only)
+    const tdAdjMat = document.createElement("td");
+    const tdAdjLab = document.createElement("td");
+
+    tdAdjMat.textContent = fmtMoney(rawMat * (1 + perItemPct));
+    tdAdjLab.textContent = fmtMoney(rawLab * (1 + perItemPct));
+
+    tr.append(tdItem, tdUnit, tdRawMat, tdRawLab, tdAdjMat, tdAdjLab);
+    body.appendChild(tr);
+  }
+}
+
+function bindAdmin() {
+  // long-press logo to unlock
+  const logo = $("#companyLogo");
+  let pressTimer = null;
+
+  const showAdmin = () => {
+    $("#adminPanel").classList.remove("hidden");
+    $("#adminStateMsg").textContent = "Admin unlocked";
+  };
+
+  const askPin = () => {
+    const pin = prompt("Enter Admin PIN");
+    if (pin === null) return;
+    if (String(pin).trim() === ADMIN_PIN) showAdmin();
+    else alert("Wrong PIN");
+  };
+
+  logo.addEventListener("touchstart", () => {
+    pressTimer = setTimeout(askPin, 1200);
+  });
+  logo.addEventListener("touchend", () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  });
+  logo.addEventListener("mousedown", () => {
+    pressTimer = setTimeout(askPin, 900);
+  });
+  logo.addEventListener("mouseup", () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  });
+
+  // bind admin fields
+  $("#adminMarkupEnabled").value = STATE.admin.perItemEnabled ? "1" : "0";
+  $("#adminMarkupOverride").value = STATE.admin.perItemOverridePct ?? "";
+  $("#adminTariffEnabled").value = STATE.admin.tariffEnabled ? "1" : "0";
+  $("#adminTariffPct").value = STATE.admin.tariffPct ?? "";
+
+  // extra global controls (injected here so you don't have to edit HTML again)
+  // We'll append to adminPanel dynamically
+  const panel = $("#adminPanel");
+  if (!$("#adminGlobalEnabled")) {
+    const grid = panel.querySelector(".grid");
+
+    const wrap1 = document.createElement("label");
+    wrap1.className = "field";
+    wrap1.innerHTML = `
+      <span>Global Adjustment Enabled</span>
+      <select id="adminGlobalEnabled">
+        <option value="0">OFF</option>
+        <option value="1">ON</option>
+      </select>
+    `;
+
+    const wrap2 = document.createElement("label");
+    wrap2.className = "field";
+    wrap2.innerHTML = `
+      <span>Global Adjustment % (applies to subtotal)</span>
+      <input id="adminGlobalPct" type="number" inputmode="decimal" placeholder="e.g., 10" />
+    `;
+
+    grid.appendChild(wrap1);
+    grid.appendChild(wrap2);
+
+    $("#adminGlobalEnabled").value = STATE.admin.globalEnabled ? "1" : "0";
+    $("#adminGlobalPct").value = STATE.admin.globalPct ?? "";
+  }
+
+  $("#adminApplyBtn").addEventListener("click", () => {
+    STATE.admin.perItemEnabled = $("#adminMarkupEnabled").value === "1";
+    STATE.admin.perItemOverridePct = $("#adminMarkupOverride").value;
+
+    STATE.admin.tariffEnabled = $("#adminTariffEnabled").value === "1";
+    STATE.admin.tariffPct = $("#adminTariffPct").value;
+
+    STATE.admin.globalEnabled = $("#adminGlobalEnabled").value === "1";
+    STATE.admin.globalPct = $("#adminGlobalPct").value;
+
+    saveState();
+    updateAll();
+    $("#adminStateMsg").textContent = "Admin settings applied";
+  });
+
+  $("#adminResetBtn").addEventListener("click", () => {
+    STATE.admin = structuredClone(DEFAULT_STATE.admin);
+    saveState();
+    location.reload();
+  });
+}
+
+function bindButtons() {
+  $("#clearBtn").addEventListener("click", () => {
+    localStorage.removeItem(LS_KEY);
+    location.reload();
+  });
+
+  $("#printBtn").addEventListener("click", () => {
+    const q = computeQuote();
+    openPrintWindow(q);
+  });
+}
+
+/** =========================
+ *  PRINT (PDF) — includes header + final total
+ *  ========================= */
+function openPrintWindow(q) {
+  const c = DATA.settings.company;
+
+  const rows = q.lines.map(ln => `
+    <tr>
+      <td style="text-align:left">${escapeHtml(ln.item.label)}</td>
+      <td>${escapeHtml(ln.item.unit)}</td>
+      <td>${typeof ln.qty === "string" ? ln.qty : fmtNum(ln.qty)}</td>
+      <td>${fmtMoney(ln.mat)}</td>
+      <td>${fmtMoney(ln.lab)}</td>
+      <td><b>${fmtMoney(ln.total)}</b></td>
+    </tr>
+  `).join("");
+
+  const w = window.open("", "_blank");
+  const logoUrl = c.logo || "logo.png";
+
+  w.document.write(`
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>${escapeHtml(c.name || "Quote")}</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:24px;color:#111}
+    .hdr{display:flex;gap:16px;align-items:center;border:1px solid #ddd;padding:14px;border-radius:14px}
+    .logo{width:84px;height:84px;border-radius:14px;object-fit:cover;border:1px solid #ddd}
+    h1{margin:0;font-size:22px}
+    .sub{margin-top:4px;color:#444}
+    .meta{margin-top:6px;color:#222;font-weight:700}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{border-bottom:1px solid #eee;padding:10px 8px;text-align:right;vertical-align:top}
+    th{text-transform:uppercase;font-size:11px;letter-spacing:.04em;color:#555;background:#fafafa}
+    th:first-child, td:first-child{text-align:left}
+    tfoot td{background:#f3f6ff;font-size:18px;font-weight:900}
+    .totalbox{margin-top:14px;border:2px solid #111;border-radius:14px;padding:14px;display:flex;justify-content:space-between;font-size:20px;font-weight:900}
+    .note{margin-top:14px;color:#555;font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="hdr">
+    <img class="logo" src="${logoUrl}" alt="logo" />
+    <div>
+      <h1>${escapeHtml(c.name || "Haroon & Sons Consulting Quote")}</h1>
+      <div class="sub">Fast estimate • Clear scope • Clean totals</div>
+      <div class="meta">${escapeHtml(c.phone || "")} • ${escapeHtml(c.email || "")}</div>
+    </div>
+  </div>
+
+  <div class="totalbox">
+    <div>Estimated Total</div>
+    <div>${fmtMoney(q.grand)}</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left">Item</th>
+        <th>Unit</th>
+        <th>Qty</th>
+        <th>Material</th>
+        <th>Labor</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+    <tfoot>
+      <tr>
+        <td colspan="5" style="text-align:left">Estimated Total</td>
+        <td>${fmtMoney(q.grand)}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="note">
+    Note: This is an estimator. Final pricing may change based on field conditions, permits, and material availability.
+  </div>
+</body>
+</html>
+  `);
+
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
 function escapeHtml(s) {
-  return String(s || "")
+  return String(s ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -55,660 +733,44 @@ function escapeHtml(s) {
     .replaceAll("'", "&#039;");
 }
 
-function saveState() {
-  const payload = {
-    inputs: state.inputs,
-    scopeOn: state.scopeOn,
-    qtyEach: state.qtyEach,
-    admin: {
-      markupEnabled: state.admin.markupEnabled,
-      markupOverridePct: state.admin.markupOverridePct,
-      tariffEnabled: state.admin.tariffEnabled,
-      tariffPct: state.admin.tariffPct,
-      includeLineItemsOnPDF: state.admin.includeLineItemsOnPDF
-    }
-  };
-  try { localStorage.setItem(LS_KEY, JSON.stringify(payload)); } catch (e) {}
+/** =========================
+ *  UPDATE ALL
+ *  ========================= */
+function updateAll() {
+  renderHeader();
+  renderCalculated();
+  renderQuote();
+  renderRates();
 }
 
-function loadState() {
+/** =========================
+ *  BOOT
+ *  ========================= */
+(async function init() {
   try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return;
-    const s = JSON.parse(raw);
-
-    if (s.inputs) Object.assign(state.inputs, s.inputs);
-    if (s.scopeOn) state.scopeOn = s.scopeOn;
-    if (s.qtyEach) state.qtyEach = s.qtyEach;
-
-    if (s.admin) {
-      state.admin.markupEnabled = !!s.admin.markupEnabled;
-      state.admin.markupOverridePct =
-        (s.admin.markupOverridePct === null || s.admin.markupOverridePct === undefined)
-          ? null
-          : Number(s.admin.markupOverridePct);
-      state.admin.tariffEnabled = !!s.admin.tariffEnabled;
-      state.admin.tariffPct = Number(s.admin.tariffPct) || 0;
-      state.admin.includeLineItemsOnPDF =
-        (s.admin.includeLineItemsOnPDF === undefined) ? true : !!s.admin.includeLineItemsOnPDF;
-    }
-  } catch (e) {}
-}
-
-function computeGeometry() {
-  const floorSF = state.inputs.floorSF ?? 0;
-  const ceilFt = state.inputs.ceilFt ?? 8;
-
-  const len = state.inputs.lenFt;
-  const wid = state.inputs.widFt;
-  const override = state.inputs.perimOverride;
-
-  let perim = null;
-
-  if (Number.isFinite(override) && override > 0) perim = override;
-  else if (Number.isFinite(len) && Number.isFinite(wid) && len > 0 && wid > 0) perim = 2 * (len + wid);
-  else if (floorSF > 0) perim = 4 * Math.sqrt(floorSF);
-  else perim = 0;
-
-  const wallSF = perim * (ceilFt > 0 ? ceilFt : 8);
-  const paintSF = wallSF + floorSF;
-
-  return { floorSF, ceilFt, perimLF: perim, wallSF, paintSF };
-}
-
-function getTieredMarkupPctBySF(sf) {
-  const tiers = (DATA?.settings?.markup_tiers || []).slice();
-  if (!tiers.length) return 0;
-
-  const area = Number.isFinite(sf) ? sf : 0;
-  for (const t of tiers) {
-    const min = Number.isFinite(t.min) ? t.min : 0;
-    const max = (t.max === null || t.max === undefined) ? Infinity : t.max;
-    if (area >= min && area <= max) return Number(t.pct) || 0;
-  }
-  return Number(tiers[tiers.length - 1].pct) || 0;
-}
-
-function effectiveMarkupPct() {
-  if (!state.admin.markupEnabled) return 0;
-  const override = state.admin.markupOverridePct;
-  if (Number.isFinite(override)) return clamp(override, 0, 200);
-  const g = computeGeometry();
-  return clamp(getTieredMarkupPctBySF(g.floorSF), 0, 200);
-}
-
-function effectiveTariffPct() {
-  if (!state.admin.tariffEnabled) return 0;
-  const p = Number(state.admin.tariffPct) || 0;
-  return clamp(p, 0, 200);
-}
-
-function setCompanyHeader() {
-  const c = DATA.settings.company;
-
-  $("#companyName").textContent = c.name || "Haroon & Sons Consulting Quote";
-
-  const phone = (c.phone || "").trim();
-  const email = (c.email || "").trim();
-
-  const phoneEl = $("#companyPhone");
-  const emailEl = $("#companyEmail");
-
-  phoneEl.textContent = phone ? `📞 ${phone}` : "📞";
-  emailEl.textContent = email ? `✉️ ${email}` : "✉️";
-
-  if (phone) phoneEl.href = "tel:" + phone.replace(/[^\d+]/g, "");
-  if (email) emailEl.href = "mailto:" + email;
-
-  const logoEl = $("#companyLogo");
-  logoEl.src = c.logo || "logo.png";
-}
-
-function initDefaultsFromJson() {
-  const defaults = DATA.settings.defaults || {};
-  if (state.inputs.ceilFt == null) state.inputs.ceilFt = defaults.ceilingHeight ?? 8;
-  if (state.inputs.floorSF == null) state.inputs.floorSF = defaults.projectArea ?? null;
-
-  for (const it of DATA.items) {
-    if (state.scopeOn[it.id] === undefined) state.scopeOn[it.id] = !!it.default_on;
-
-    if (it.unit === "EACH") {
-      if (state.qtyEach[it.id] === undefined) {
-        const dq = (it.default_qty === null || it.default_qty === undefined) ? 0 : Number(it.default_qty);
-        state.qtyEach[it.id] = Number.isFinite(dq) ? dq : 0;
-      }
-    }
-  }
-}
-
-function renderGeometry() {
-  const g = computeGeometry();
-
-  $("#inFloorSF").value = state.inputs.floorSF ?? "";
-  $("#inCeilFt").value = state.inputs.ceilFt ?? "";
-  $("#inLenFt").value = state.inputs.lenFt ?? "";
-  $("#inWidFt").value = state.inputs.widFt ?? "";
-  $("#inPerimLF").value = state.inputs.perimOverride ?? "";
-
-  $("#outPerimLF").textContent = round2(g.perimLF).toLocaleString();
-  $("#outWallSF").textContent = round2(g.wallSF).toLocaleString();
-  $("#outPaintSF").textContent = round2(g.paintSF).toLocaleString();
-
-  const pct = effectiveMarkupPct();
-  $("#markupBanner").textContent = `Markup tier: ${pct}% (${round2(g.floorSF).toLocaleString()} SF)`;
-}
-
-function renderScopeList() {
-  const list = $("#scopeList");
-  list.innerHTML = "";
-
-  for (const it of DATA.items) {
-    const on = !!state.scopeOn[it.id];
-
-    const wrap = document.createElement("div");
-    wrap.className = "chk";
-
-    const left = document.createElement("label");
-    left.style.display = "flex";
-    left.style.gap = "10px";
-    left.style.alignItems = "flex-start";
-    left.style.flex = "1";
-
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = on;
-    cb.addEventListener("change", () => {
-      state.scopeOn[it.id] = cb.checked;
-      saveState();
-      renderAll();
-    });
-
-    const meta = document.createElement("div");
-    meta.style.flex = "1";
-
-    const title = document.createElement("b");
-    title.textContent = it.label;
-
-    const small = document.createElement("small");
-    const mat = Number(it.material_rate) || 0;
-    const lab = Number(it.labor_rate) || 0;
-    small.textContent = `${it.unit} • material ${mat.toFixed(2)} • labor ${lab.toFixed(2)}`;
-
-    meta.appendChild(title);
-    meta.appendChild(small);
-
-    left.appendChild(cb);
-    left.appendChild(meta);
-
-    wrap.appendChild(left);
-
-    // RIGHT SIDE: Qty control for EACH items
-    if (it.unit === "EACH") {
-      const qtyWrap = document.createElement("div");
-      qtyWrap.style.display = "flex";
-      qtyWrap.style.flexDirection = "column";
-      qtyWrap.style.alignItems = "flex-end";
-      qtyWrap.style.gap = "6px";
-      qtyWrap.style.minWidth = "90px";
-
-      const labEl = document.createElement("div");
-      labEl.style.fontSize = "12px";
-      labEl.style.opacity = ".75";
-      labEl.textContent = "Qty";
-
-      const inp = document.createElement("input");
-      inp.type = "number";
-      inp.inputMode = "numeric";
-      inp.min = "0";
-      inp.step = "1";
-      inp.value = String(state.qtyEach[it.id] ?? 0);
-      inp.style.width = "86px";
-      inp.style.padding = "10px 10px";
-      inp.style.borderRadius = "12px";
-      inp.style.border = "1px solid rgba(255,255,255,.10)";
-      inp.style.background = "rgba(0,0,0,.18)";
-      inp.style.color = "inherit";
-      inp.addEventListener("input", () => {
-        const v = Math.max(0, Math.round(num(inp.value) ?? 0));
-        state.qtyEach[it.id] = v;
-        saveState();
-        renderAll();
-      });
-
-      qtyWrap.appendChild(labEl);
-      qtyWrap.appendChild(inp);
-      wrap.appendChild(qtyWrap);
-    }
-
-    list.appendChild(wrap);
-  }
-}
-
-function computeQtyForItem(it, geom, context) {
-  const u = it.unit;
-
-  if (u === "FLOOR_SF") return geom.floorSF;
-  if (u === "WALL_SF") return geom.wallSF;
-  if (u === "PAINT_SF") return geom.paintSF;
-  if (u === "LF") return geom.perimLF;
-
-  if (u === "EACH") {
-    // computed EACH helpers:
-    if (it.id === "door_casing_lf") return context.doorCasingLF; // uses EACH slot as computed quantity
-    if (it.id === "shoe_molding_lf") return context.shoeMoldingLF;
-
-    if (it.id === "plumbing_supplies_allowance_each_fixture") return context.fixtureCount;
-    return Number(state.qtyEach[it.id] ?? 0);
-  }
-
-  if (u === "PCT_MAT") return 1;
-
-  return 0;
-}
-
-function buildContext(geom) {
-  // Door count from qtyEach
-  const doorIds = [
-    "door_interior_hollow_core_each",
-    "door_interior_solid_core_each",
-    "door_closet_each"
-  ];
-
-  let doorCount = 0;
-  for (const id of doorIds) {
-    if (!state.scopeOn[id]) continue;
-    doorCount += Number(state.qtyEach[id] ?? 0);
-  }
-
-  // casing LF estimate: ~17 LF per door opening
-  const doorCasingLF = doorCount * 17;
-
-  // shoe molding: match perimeter LF
-  const shoeMoldingLF = geom.perimLF;
-
-  // fixture count: all selected plumbing/fixtures EACH items (except allowance/consumables and computed helpers)
-  let fixtureCount = 0;
-  for (const it of DATA.items) {
-    if (!state.scopeOn[it.id]) continue;
-    if (it.unit !== "EACH") continue;
-
-    if (it.id === "plumbing_supplies_allowance_each_fixture") continue;
-    if (it.id === "job_consumables_fasteners_of_raw_materials") continue;
-    if (it.id === "door_casing_lf") continue;
-    if (it.id === "shoe_molding_lf") continue;
-
-    // count plumbing-ish fixtures
-    if (it.id.startsWith("plumbing_") || it.category === "Fixtures" || it.id.includes("upflush")) {
-      fixtureCount += Number(state.qtyEach[it.id] ?? 0);
-    }
-  }
-
-  return { doorCount, doorCasingLF, shoeMoldingLF, fixtureCount };
-}
-
-function computeQuote() {
-  const geom = computeGeometry();
-  const ctx = buildContext(geom);
-
-  const rows = [];
-  let rawMat = 0;
-  let rawLab = 0;
-
-  for (const it of DATA.items) {
-    if (!state.scopeOn[it.id]) continue;
-
-    let qty = computeQtyForItem(it, geom, ctx);
-    qty = Number.isFinite(qty) ? qty : 0;
-
-    const matRate = Number(it.material_rate) || 0;
-    const labRate = Number(it.labor_rate) || 0;
-
-    if (it.unit === "PCT_MAT") {
-      rows.push({
-        it, qty: 1, mat: 0, lab: 0, total: 0,
-        _deferPctMat: true, _pct: matRate
-      });
-      continue;
-    }
-
-    const mat = qty * matRate;
-    const lab = qty * labRate;
-    const total = mat + lab;
-
-    rawMat += mat;
-    rawLab += lab;
-
-    rows.push({ it, qty, mat, lab, total });
-  }
-
-  // PCT_MAT based on raw materials
-  for (const r of rows) {
-    if (!r._deferPctMat) continue;
-    const pct = Number(r._pct) || 0;
-    r.qty = 1;
-    r.mat = rawMat * pct;
-    r.lab = 0;
-    r.total = r.mat;
-  }
-
-  const rawSubtotal = rawMat + rawLab;
-
-  const markupPct = effectiveMarkupPct();
-  const tariffPct = effectiveTariffPct();
-
-  const markupAmt = rawSubtotal * (markupPct / 100);
-  const tariffBase = rawSubtotal + markupAmt;
-  const tariffAmt = tariffBase * (tariffPct / 100);
-
-  const grandTotal = rawSubtotal + markupAmt + tariffAmt;
-
-  return { geom, rows, rawMat, rawLab, rawSubtotal, markupPct, markupAmt, tariffPct, tariffAmt, grandTotal };
-}
-
-function formatQty(qty, unit) {
-  if (!Number.isFinite(qty)) return "0";
-  if (unit === "PCT_MAT") return "—";
-  if (unit === "EACH") return String(Math.round(qty));
-  return round2(qty).toLocaleString();
-}
-
-function renderQuoteAndRates() {
-  const q = computeQuote();
-
-  $("#rawSubtotal").textContent = money(q.rawSubtotal);
-  $("#markupApplied").textContent = q.markupPct ? `${round2(q.markupPct)}%` : "OFF";
-  $("#tariffApplied").textContent = q.tariffPct ? `${round2(q.tariffPct)}%` : "OFF";
-  $("#grandTotal").textContent = money(q.grandTotal);
-
-  const qb = $("#quoteBody");
-  qb.innerHTML = "";
-  for (const r of q.rows) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="left">${escapeHtml(r.it.label)}</td>
-      <td>${escapeHtml(r.it.unit)}</td>
-      <td>${formatQty(r.qty, r.it.unit)}</td>
-      <td>${money(r.mat)}</td>
-      <td>${money(r.lab)}</td>
-      <td><b>${money(r.total)}</b></td>
-    `;
-    qb.appendChild(tr);
-  }
-
-  const rb = $("#ratesBody");
-  rb.innerHTML = "";
-  for (const it of DATA.items) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="left">${escapeHtml(it.label)}</td>
-      <td>${escapeHtml(it.unit)}</td>
-      <td>${it.unit === "PCT_MAT" ? `${round2((Number(it.material_rate)||0)*100)}% of raw materials` : money(Number(it.material_rate)||0)}</td>
-      <td>${money(Number(it.labor_rate)||0)}</td>
-    `;
-    rb.appendChild(tr);
-  }
-}
-
-function setAdminUI() {
-  $("#adminMarkupEnabled").value = state.admin.markupEnabled ? "1" : "0";
-  $("#adminMarkupOverride").value =
-    (state.admin.markupOverridePct === null || state.admin.markupOverridePct === undefined)
-      ? ""
-      : String(state.admin.markupOverridePct);
-
-  $("#adminTariffEnabled").value = state.admin.tariffEnabled ? "1" : "0";
-  $("#adminTariffPct").value = String(state.admin.tariffPct || 0);
-
-  if (!$("#adminIncludeLines")) {
-    const panel = $("#adminPanel .grid");
-    const wrap = document.createElement("label");
-    wrap.className = "field";
-    wrap.innerHTML = `
-      <span>PDF: Include line items</span>
-      <select id="adminIncludeLines">
-        <option value="1">YES</option>
-        <option value="0">NO (summary only)</option>
-      </select>
-    `;
-    panel.appendChild(wrap);
-  }
-  $("#adminIncludeLines").value = state.admin.includeLineItemsOnPDF ? "1" : "0";
-}
-
-function unlockAdmin() {
-  const pin = prompt("Enter admin PIN");
-  if (pin === ADMIN_PIN) {
-    state.admin.unlocked = true;
-    $("#adminPanel").classList.remove("hidden");
-    $("#adminStateMsg").textContent = "Admin mode unlocked.";
-    saveState();
-  } else {
-    alert("Wrong PIN");
-  }
-}
-
-function wireAdminUnlockLongPress() {
-  const logo = $("#companyLogo");
-  if (!logo) return;
-
-  let t = null;
-  const start = () => { t = setTimeout(() => unlockAdmin(), 1200); };
-  const stop = () => { if (t) clearTimeout(t); t = null; };
-
-  logo.addEventListener("touchstart", start, { passive: true });
-  logo.addEventListener("touchend", stop);
-  logo.addEventListener("touchcancel", stop);
-
-  logo.addEventListener("mousedown", start);
-  logo.addEventListener("mouseup", stop);
-  logo.addEventListener("mouseleave", stop);
-}
-
-function wireInputs() {
-  const bind = (id, key) => {
-    const el = $(id);
-    el.addEventListener("input", () => {
-      state.inputs[key] = num(el.value);
-      saveState();
-      renderAll();
-    });
-  };
-
-  bind("#inFloorSF", "floorSF");
-  bind("#inCeilFt", "ceilFt");
-  bind("#inLenFt", "lenFt");
-  bind("#inWidFt", "widFt");
-  bind("#inPerimLF", "perimOverride");
-
-  $("#adminApplyBtn").addEventListener("click", () => {
-    state.admin.markupEnabled = $("#adminMarkupEnabled").value === "1";
-    const ov = num($("#adminMarkupOverride").value);
-    state.admin.markupOverridePct = Number.isFinite(ov) ? ov : null;
-
-    state.admin.tariffEnabled = $("#adminTariffEnabled").value === "1";
-    state.admin.tariffPct = num($("#adminTariffPct").value) || 0;
-
-    state.admin.includeLineItemsOnPDF = ($("#adminIncludeLines").value === "1");
-
-    saveState();
-    renderAll();
-    $("#adminStateMsg").textContent = "Admin settings applied.";
-  });
-
-  $("#adminResetBtn").addEventListener("click", () => {
-    state.admin.markupEnabled = true;
-    state.admin.markupOverridePct = null;
-    state.admin.tariffEnabled = false;
-    state.admin.tariffPct = 0;
-    state.admin.includeLineItemsOnPDF = true;
-    saveState();
-    renderAll();
-    $("#adminStateMsg").textContent = "Admin settings reset.";
-  });
-}
-
-function wireTabs() {
-  $$(".tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      $$(".tab").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      const which = btn.dataset.tab;
-      $$(".panel").forEach(p => p.classList.remove("active"));
-      $("#tab-" + which).classList.add("active");
-    });
-  });
-}
-
-function wireButtons() {
-  $("#clearBtn").addEventListener("click", () => {
-    if (!confirm("Clear saved values on this device?")) return;
-    localStorage.removeItem(LS_KEY);
-    location.reload();
-  });
-
-  $("#printBtn").addEventListener("click", () => {
-    const q = computeQuote();
-    openPrintWindowOptionA(q);
-  });
-}
-
-function openPrintWindowOptionA(q) {
-  const c = DATA.settings.company || {};
-  const geom = q.geom;
-  const linesOn = state.admin.includeLineItemsOnPDF;
-
-  const htmlLines = linesOn ? `
-    <h3 style="margin:18px 0 8px;">Line Items</h3>
-    <table class="tbl">
-      <thead>
-        <tr>
-          <th class="left">Item</th><th>Unit</th><th>Qty</th><th>Material</th><th>Labor</th><th>Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${q.rows.map(r => `
-          <tr>
-            <td class="left">${escapeHtml(r.it.label)}</td>
-            <td>${escapeHtml(r.it.unit)}</td>
-            <td>${formatQty(r.qty, r.it.unit)}</td>
-            <td>${money(r.mat)}</td>
-            <td>${money(r.lab)}</td>
-            <td><b>${money(r.total)}</b></td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  ` : "";
-
-  const w = window.open("", "_blank");
-  const title = escapeHtml(c.name || "Haroon & Sons Consulting Quote");
-
-  w.document.open();
-  w.document.write(`
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${title}</title>
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:18px;color:#111}
-    .header{display:flex;gap:14px;align-items:center;border:1px solid #ddd;border-radius:14px;padding:14px}
-    .logo{width:74px;height:74px;border-radius:12px;object-fit:cover;border:1px solid #eee}
-    h1{margin:0;font-size:20px}
-    .muted{color:#444;margin-top:4px}
-    .right{margin-left:auto;text-align:right}
-    .big{font-size:22px;font-weight:900}
-    .box{border:1px solid #ddd;border-radius:14px;padding:14px;margin-top:14px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #eee}
-    .row:last-child{border-bottom:none}
-    .k{color:#444}
-    .v{font-weight:800}
-    .final{font-size:26px;font-weight:1000}
-    .tbl{width:100%;border-collapse:collapse;margin-top:8px}
-    .tbl th,.tbl td{border-bottom:1px solid #eee;padding:10px 8px;text-align:right;white-space:nowrap}
-    .tbl th.left,.tbl td.left{text-align:left;white-space:normal}
-    .tbl thead th{background:#f6f6f6;border-bottom:1px solid #ddd}
-    .note{color:#555;font-size:12px;margin-top:12px}
-    @media print{body{margin:10px}}
-  </style>
-</head>
-<body>
-  <div class="header">
-    <img class="logo" src="${escapeHtml(c.logo || "logo.png")}" alt="logo" />
-    <div>
-      <h1>${escapeHtml(c.name || "Haroon & Sons Consulting Quote")}</h1>
-      <div class="muted">${escapeHtml(c.phone || "")}${c.phone && c.email ? " • " : ""}${escapeHtml(c.email || "")}</div>
-      <div class="muted">Project: ${round2(geom.floorSF).toLocaleString()} SF • Ceiling: ${round2(geom.ceilFt)} ft</div>
-    </div>
-    <div class="right">
-      <div class="muted">Markup tier</div>
-      <div class="big">${round2(q.markupPct)}%</div>
-      <div class="muted">${q.tariffPct ? `Tariff ${round2(q.tariffPct)}%` : "Tariff OFF"}</div>
-    </div>
-  </div>
-
-  <div class="box">
-    <div class="grid">
-      <div class="row"><span class="k">Raw Materials</span><span class="v">${money(q.rawMat)}</span></div>
-      <div class="row"><span class="k">Raw Labor</span><span class="v">${money(q.rawLab)}</span></div>
-      <div class="row"><span class="k">Raw Subtotal</span><span class="v">${money(q.rawSubtotal)}</span></div>
-      <div class="row"><span class="k">Markup (${round2(q.markupPct)}%)</span><span class="v">${money(q.markupAmt)}</span></div>
-      <div class="row"><span class="k">Tariff (${q.tariffPct ? round2(q.tariffPct) : 0}%)</span><span class="v">${money(q.tariffAmt)}</span></div>
-      <div class="row"><span class="k final">FINAL TOTAL</span><span class="v final">${money(q.grandTotal)}</span></div>
-    </div>
-  </div>
-
-  ${htmlLines}
-
-  <div class="note">
-    Note: This is an estimate. Final pricing may change based on field conditions, permits, and material availability.
-  </div>
-
-  <script>window.onload = () => { window.print(); };</script>
-</body>
-</html>
-  `);
-  w.document.close();
-}
-
-function renderAll() {
-  renderGeometry();
-  renderScopeList();
-  setAdminUI();
-  renderQuoteAndRates();
-}
-
-async function loadData() {
-  const res = await fetch(`data.json?v=${Date.now()}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Cannot load data.json");
-  return await res.json();
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    loadState();
     DATA = await loadData();
 
-    if (!DATA.settings) DATA.settings = {};
-    if (!DATA.settings.company) DATA.settings.company = {};
-    if (!Array.isArray(DATA.items)) DATA.items = [];
+    // Initialize selection defaults once (so all items appear)
+    for (const it of DATA.items) {
+      if (STATE.selections[it.id] === undefined) {
+        STATE.selections[it.id] = !!it.default_on;
+      }
+      if (it.unit === "EACH" && STATE.qty[it.id] === undefined) {
+        if (it.default_qty !== undefined && it.default_qty !== null) STATE.qty[it.id] = it.default_qty;
+      }
+    }
+    saveState();
 
-    initDefaultsFromJson();
-    setCompanyHeader();
+    setTabs();
+    renderHeader();
+    bindInputs();
+    renderScopeList();
+    bindAdmin();
+    bindButtons();
 
-    wireTabs();
-    wireInputs();
-    wireButtons();
-    wireAdminUnlockLongPress();
-
-    if (state.admin.unlocked) $("#adminPanel").classList.remove("hidden");
-
-    renderAll();
+    updateAll();
   } catch (e) {
-    alert("Error loading app files. Make sure index.html, app.js, styles.css, data.json are all in the same folder.");
+    alert("Error loading app files. Make sure index.html, app.js, styles.css, data.json are all in the same folder on GitHub Pages.");
     console.error(e);
   }
-});
+})();
