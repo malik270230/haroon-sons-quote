@@ -233,6 +233,14 @@ h3{margin:0 0 10px; font-size:16px; color:rgba(233,238,252,.95)}
 .printTotal{font-size:14px; font-weight:900}
 
 /* PRINT: clean PDF with header + totals aligned */
+
+@media print{
+  .tbl td, .tbl th{ border-right: 1px solid #eee; }
+  .tbl td:last-child, .tbl th:last-child{ border-right: none; }
+
+  .tbl tbody tr:nth-child(even) td{ background: #fafafa; }
+}
+
 @media print{
   body{background:#fff; color:#000}
   .hero, .tabs, .btnrow, .hint{display:none !important}
