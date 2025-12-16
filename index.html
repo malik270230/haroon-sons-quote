@@ -199,4 +199,48 @@
 
   <script type="module" src="app.js?v=77777"></script>
 </body>
+  <!-- Hidden Admin Panel (PIN protected) -->
+<div id="adminOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999;">
+  <div style="max-width:520px; margin:10vh auto; background:#0f1b33; color:#e9eefc; border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:18px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+      <div style="font-weight:700; font-size:16px;">Admin Controls</div>
+      <button id="adminCloseBtn" type="button" style="background:transparent; color:#e9eefc; border:1px solid rgba(255,255,255,.2); border-radius:10px; padding:6px 10px; cursor:pointer;">Close</button>
+    </div>
+
+    <div id="adminLocked" style="margin-top:14px;">
+      <div style="opacity:.85; font-size:13px; margin-bottom:8px;">Enter PIN to unlock</div>
+      <input id="adminPinInput" type="password" inputmode="numeric" placeholder="PIN" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18); background:#0b1220; color:#e9eefc;">
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button id="adminUnlockBtn" type="button" style="flex:1; padding:10px 12px; border-radius:10px; border:0; cursor:pointer;">Unlock</button>
+        <button id="adminResetBtn" type="button" style="padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:transparent; color:#e9eefc; cursor:pointer;">Reset</button>
+      </div>
+      <div id="adminPinMsg" style="margin-top:8px; font-size:13px; opacity:.85;"></div>
+    </div>
+
+    <div id="adminUnlocked" style="display:none; margin-top:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <div>
+          <div style="font-weight:700;">Tariff bump</div>
+          <div style="opacity:.8; font-size:13px;">Adds on top of sqft markup (hidden)</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input id="tariffPct" type="number" min="0" max="30" step="0.5" style="width:90px; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.18); background:#0b1220; color:#e9eefc;">
+          <div>%</div>
+        </div>
+      </div>
+
+      <label style="display:flex; align-items:center; gap:10px; margin-top:12px;">
+        <input id="tariffEnabled" type="checkbox">
+        <span>Enable tariff bump</span>
+      </label>
+
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button id="adminApplyBtn" type="button" style="flex:1; padding:10px 12px; border-radius:10px; border:0; cursor:pointer;">Apply</button>
+        <button id="adminClearBtn" type="button" style="padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:transparent; color:#e9eefc; cursor:pointer;">Clear bump</button>
+      </div>
+
+      <div id="adminStateMsg" style="margin-top:10px; font-size:13px; opacity:.85;"></div>
+    </div>
+  </div>
+</div>
 </html>
