@@ -220,16 +220,42 @@ h3{margin:0 0 10px; font-size:16px; color:rgba(233,238,252,.95)}
 }
 
 .hidden{display:none !important}
+.noPrint{}
 
-/* Print: customer-facing */
+/* Print header hidden on screen */
+.printHeader{display:none}
+.printRule{border:none; border-top:1px solid #ddd; margin:10px 0}
+.printRow{display:flex; justify-content:space-between; gap:12px; align-items:flex-end}
+.printTitle{font-size:18px; font-weight:900}
+.printSub{font-size:12px; color:#444}
+.printContact{font-size:12px; text-align:right}
+.printMeta{font-size:12px; color:#444}
+.printTotal{font-size:14px; font-weight:900}
+
+/* PRINT: clean PDF with header + totals aligned */
 @media print{
   body{background:#fff; color:#000}
-  /* Keep hero visible (company header) */
-  .tabs, .btnrow, .hint{display:none !important}
+  .hero, .tabs, .btnrow, .hint, .noPrint{display:none !important}
   .card{box-shadow:none; border:1px solid #ddd; background:#fff}
-  .tbl thead th{background:#f3f3f3; color:#000}
-  .tbl th, .tbl td{border-bottom:1px solid #e6e6e6}
-  .tbl tfoot td{background:#f3f3f3}
-  /* Hide internal pills on print so client doesn't see "Raw Subtotal / Pricing Status / Tariff Status" */
-  .totals{display:none !important}
+  .tablewrap{border:none}
+  .tbl{min-width:0}
+  .tbl thead{display: table-header-group;}
+  .tbl tfoot{display: table-footer-group;}
+  .tbl thead th{
+    background:#f3f3f3 !important;
+    color:#000 !important;
+    position:static !important;
+  }
+  .tbl th, .tbl td{
+    border-bottom:1px solid #e6e6e6;
+    color:#000;
+  }
+  .tbl tfoot td{
+    background:#f3f3f3 !important;
+    color:#000 !important;
+    font-size:16px;
+  }
+
+  /* Show print header */
+  .printHeader{display:block !important}
 }
