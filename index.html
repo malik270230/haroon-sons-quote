@@ -86,8 +86,8 @@
       </div>
 
       <div class="card">
-        <h2>Scope toggles</h2>
-        <div class="hint">EACH items (doors/fixtures) have quantity boxes.</div>
+        <h2>Scope toggles + quantities</h2>
+        <div class="hint">EACH items always have quantity. Kitchen/Wet Bar uses LF/SF quantities too.</div>
         <div id="scopeList" class="checklist"></div>
       </div>
 
@@ -178,9 +178,11 @@
     <section class="panel" id="tab-rates">
       <div class="card">
         <h2>Rates</h2>
+        <div class="hint" id="ratesTier">Enter Project Area (SF) to see tier</div>
         <div class="hint">
-          Raw = base rates. Adjusted = per-item tier rate used for estimates (hidden from customer PDF).
+          Raw = base rates. Adjusted = per-item tier rates used for estimates (hidden from customer PDF).
         </div>
+
         <div class="tablewrap">
           <table class="tbl">
             <thead>
