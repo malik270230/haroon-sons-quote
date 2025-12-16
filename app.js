@@ -15,7 +15,7 @@ const LS_KEY = "haroon_sons_quote_v1_state";
    Option A – iPhone friendly
    ========================= */
 
-const ADMIN_PIN = "2702"; // ← CHANGE THIS PIN if you want
+const ADMIN_PIN = "0718"; // ← CHANGE THIS PIN if you want
 
 let adminUnlocked = false;
 let pressTimer = null;
