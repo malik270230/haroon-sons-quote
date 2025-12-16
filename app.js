@@ -70,12 +70,29 @@ function escapeHtml(s) {
 }
 
 /* ------------------ DATA LOAD ------------------ */
+
 async function loadData() {
   const url = new URL(location.href);
   const v = url.searchParams.get("v") || String(Date.now());
-  const res = await fetch(`data.json?v=${encodeURIComponent(v)}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Cannot load data.json");
-  return await res.json();
+
+  const dataUrl = `./data.json?v=${encodeURIComponent(v)}`;
+  console.log("Fetching:", dataUrl);
+
+  const res = await fetch(dataUrl, { cache: "no-store" });
+  if (!res.ok) {
+    const msg = `FAILED to load data.json\nURL: ${dataUrl}\nHTTP: ${res.status} ${res.statusText}`;
+    alert(msg);
+    throw new Error(msg);
+  }
+
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    const msg = `data.json loaded but is NOT valid JSON.\nURL: ${dataUrl}\n\nFirst 200 chars:\n${text.slice(0,200)}`;
+    alert(msg);
+    throw e;
+  }
 }
 
 /* ------------------ STATE ------------------ */
