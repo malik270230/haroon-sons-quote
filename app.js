@@ -12,6 +12,19 @@
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
   // ---------- DOM ----------
+   document.addEventListener("DOMContentLoaded", () => {
+  setLogoSafe();
+});
+
+async function loadData() {
+  const res = await fetch("data.json?v=" + Date.now());
+  const data = await res.json();
+
+  // (your existing code that sets name/phone/email etc...)
+
+  setLogoSafe(); // <-- important: do it AFTER data loads
+  return data;
+}
   const elLogo = $("#companyLogo");
   const elName = $("#companyName");
   const elPhone = $("#companyPhone");
