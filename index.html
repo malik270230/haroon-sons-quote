@@ -81,16 +81,14 @@
         </div>
 
         <div class="hint">
-          Tip: Leave length/width blank if you don’t know them. Perimeter override wins if entered.
+          Tip: If you don’t know length/width, leave them blank. If you know perimeter, enter it in Perimeter override.
         </div>
       </div>
 
       <div class="card">
-        <h2>Scope toggles</h2>
+        <h2>Scope + quantities</h2>
         <div id="scopeList" class="checklist"></div>
-        <div class="hint">
-          For “each” items (doors/fixtures/appliances), enter the qty on the right.
-        </div>
+        <div class="hint">For EACH items (doors, dishwasher, sinks, etc.) enter quantity on the right after you check it ON.</div>
       </div>
 
       <div class="card admin hidden" id="adminPanel">
@@ -98,7 +96,7 @@
 
         <div class="grid">
           <label class="field">
-            <span>Per-Item Pricing Enabled (tier-based)</span>
+            <span>Per-item Tier Pricing Enabled</span>
             <select id="adminMarkupEnabled">
               <option value="1">ON</option>
               <option value="0">OFF</option>
@@ -106,21 +104,8 @@
           </label>
 
           <label class="field">
-            <span>Per-Item Override % (blank = use tier)</span>
+            <span>Per-item Tier Override % (blank = use tier)</span>
             <input id="adminMarkupOverride" type="number" inputmode="decimal" placeholder="e.g., 35" />
-          </label>
-
-          <label class="field">
-            <span>Global Markup Enabled (whole job)</span>
-            <select id="adminGlobalEnabled">
-              <option value="0">OFF</option>
-              <option value="1">ON</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Global Markup %</span>
-            <input id="adminGlobalPct" type="number" inputmode="decimal" placeholder="e.g., 10" />
           </label>
 
           <label class="field">
@@ -143,7 +128,7 @@
         </div>
 
         <div class="hint">
-          Unlock: long-press the logo ~1.2s → enter PIN.
+          Unlock: Long-press the logo for ~1.2 seconds (iPhone) → enter PIN.
         </div>
         <div class="hint" id="adminStateMsg"></div>
       </div>
@@ -151,10 +136,30 @@
 
     <section class="panel" id="tab-quote">
       <div class="card">
-        <div class="totals">
+        <!-- PRINT HEADER (only shows on PDF/print) -->
+        <div class="printHeader">
+          <div class="printRow">
+            <div class="printBrand">
+              <div class="printTitle" id="printCompanyName">Haroon & Sons Consulting Quote</div>
+              <div class="printSub">Fast estimate • Clear scope • Clean totals</div>
+            </div>
+            <div class="printContact">
+              <div id="printCompanyPhone"></div>
+              <div id="printCompanyEmail"></div>
+            </div>
+          </div>
+          <div class="printRow">
+            <div id="printProjectSummary" class="printMeta"></div>
+            <div class="printTotal">Total: <b id="printGrandTotal">$0.00</b></div>
+          </div>
+          <hr class="printRule" />
+        </div>
+
+        <!-- On-screen totals (customer should NOT see these words in PDF; CSS hides them in print) -->
+        <div class="totals noPrint">
           <div class="pill">Raw Subtotal <b id="rawSubtotal">$0.00</b></div>
-          <div class="pill">Pricing Status <b id="markupApplied">—</b></div>
-          <div class="pill">Tariff Status <b id="tariffApplied">—</b></div>
+          <div class="pill">Pricing Applied <b id="markupApplied">—</b></div>
+          <div class="pill">Tariff Applied <b id="tariffApplied">—</b></div>
         </div>
 
         <div class="tablewrap">
@@ -179,33 +184,31 @@
           </table>
         </div>
 
-        <div class="btnrow">
+        <div class="btnrow noPrint">
           <button class="btn" id="printBtn">Print / Save PDF</button>
           <button class="btn ghost" id="clearBtn">Clear (this device)</button>
         </div>
 
-        <div class="hint">
-          Note: This is an estimator. Final pricing may change based on field conditions, permits, and material availability.
+        <div class="hint noPrint">
+          Note: This tool is an estimator. Final pricing may change based on field conditions, permits, and material availability.
         </div>
       </div>
     </section>
 
     <section class="panel" id="tab-rates">
       <div class="card">
-        <h2>Rates (internal)</h2>
-        <div class="hint">
-          Shows raw rates + per-item priced rates based on the current sqft tier (or override).
-        </div>
+        <h2>Rates</h2>
+        <div class="hint">Raw rates + “priced” rates (tier pricing applied). Customers do not see this in the PDF.</div>
         <div class="tablewrap">
-          <table class="tbl">
+          <table class="tbl ratesTbl">
             <thead>
               <tr>
                 <th class="left">Item</th>
                 <th>Unit</th>
-                <th>Raw Material</th>
-                <th>Raw Labor</th>
-                <th>Priced Material</th>
-                <th>Priced Labor</th>
+                <th>Raw Mat</th>
+                <th>Raw Lab</th>
+                <th>Priced Mat</th>
+                <th>Priced Lab</th>
               </tr>
             </thead>
             <tbody id="ratesBody"></tbody>
