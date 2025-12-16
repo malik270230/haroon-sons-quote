@@ -25,18 +25,13 @@
     }
   },
   "items": [
-    { "id": "framing_walls", "label": "Framing (walls)", "unit": "WALL_SF", "material_rate": 2.25, "labor_rate": 3.0, "category": "Scope", "default_on": true },
-    { "id": "electrical_whole_basement", "label": "Electrical (whole basement)", "unit": "FLOOR_SF", "material_rate": 2.75, "labor_rate": 4.75, "category": "Scope", "default_on": true },
-    { "id": "subpanel_100a_add_on", "label": "Subpanel 100A (add-on)", "unit": "EACH", "material_rate": 650.0, "labor_rate": 950.0, "category": "Scope", "default_on": true, "default_qty": 1 },
-    { "id": "insulation_walls", "label": "Insulation (walls)", "unit": "WALL_SF", "material_rate": 1.0, "labor_rate": 1.25, "category": "Scope", "default_on": true },
-    { "id": "drywall_hang_walls_ceiling", "label": "Drywall Hang (walls+ceiling)", "unit": "PAINT_SF", "material_rate": 1.6, "labor_rate": 2.4, "category": "Scope", "default_on": true },
-    { "id": "drywall_finish_taping_walls_ceiling", "label": "Drywall Finish/Taping (walls+ceiling)", "unit": "PAINT_SF", "material_rate": 0.4, "labor_rate": 1.95, "category": "Other", "default_on": true },
-    { "id": "painting_walls_ceiling", "label": "Painting (walls+ceiling)", "unit": "PAINT_SF", "material_rate": 1.05, "labor_rate": 1.75, "category": "Scope", "default_on": true },
-    { "id": "flooring_entire_floor", "label": "Flooring (entire floor)", "unit": "FLOOR_SF", "material_rate": 4.25, "labor_rate": 3.0, "category": "Scope", "default_on": true },
-    { "id": "base_molding_lf", "label": "Base Molding (LF)", "unit": "LF", "material_rate": 1.4, "labor_rate": 2.2, "category": "Other", "default_on": true },
-
-    { "id": "plumbing_toilet_each", "label": "Plumbing: Toilet (each)", "unit": "EACH", "material_rate": 320.0, "labor_rate": 450.0, "category": "Fixtures", "default_on": true, "default_qty": 1 },
-    { "id": "plumbing_vanity_faucet_each", "label": "Plumbing: Vanity + Faucet (each)", "unit": "EACH", "material_rate": 750.0, "labor_rate": 525.0, "category": "Fixtures", "default_on": true, "default_qty": 1 },
-    { "id": "plumbing_shower_package_each", "label": "Plumbing: Shower package (each)", "unit": "EACH", "material_rate": 900.0, "labor_rate": 950.0, "category": "Fixtures", "default_on": true, "default_qty": 1 },
-    { "id": "plumbing_kitchen_sink_faucet_each", "label": "Plumbing: Kitchen sink + faucet (each)", "unit": "EACH", "material_rate": 600.0, "labor_rate": 525.0, "category": "Fixtures", "default_on": true, "default_qty": 1 },
-    { "id": "plumbing_dishwasher_each", "label": "Plumbing: Dishwasher (each)", "unit": "EACH", "material_rate": 650.0, "labor_rate": 350.0, "category": "Fixtures
+    { "id": "framing_walls", "label": "Framing (walls)", "unit": "WALL_SF", "material_rate": 2.25, "labor_rate": 3.00, "default_on": true },
+    { "id": "insulation_walls", "label": "Insulation (walls)", "unit": "WALL_SF", "material_rate": 1.00, "labor_rate": 1.25, "default_on": true },
+    { "id": "drywall_hang", "label": "Drywall Hang (walls + ceiling)", "unit": "PAINT_SF", "material_rate": 1.60, "labor_rate": 2.40, "default_on": true },
+    { "id": "drywall_finish", "label": "Drywall Finish / Taping", "unit": "PAINT_SF", "material_rate": 0.40, "labor_rate": 1.95, "default_on": true },
+    { "id": "painting", "label": "Painting (walls + ceiling)", "unit": "PAINT_SF", "material_rate": 1.05, "labor_rate": 1.75, "default_on": true },
+    { "id": "electrical", "label": "Electrical (whole basement)", "unit": "FLOOR_SF", "material_rate": 2.75, "labor_rate": 4.75, "default_on": true },
+    { "id": "flooring", "label": "Flooring (entire floor)", "unit": "FLOOR_SF", "material_rate": 4.25, "labor_rate": 3.00, "default_on": true },
+    { "id": "base_molding", "label": "Base Molding", "unit": "LF", "material_rate": 1.40, "labor_rate": 2.20, "default_on": true }
+  ]
+}
