@@ -2,250 +2,200 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Haroon & Sons Consulting Quote</title>
-  <link rel="stylesheet" href="styles.css?v=77777" />
+  <link rel="stylesheet" href="styles.css?v=777777" />
 </head>
 <body>
   <div class="app">
     <header class="hero">
       <div class="hero-card">
         <div class="hero-left">
-          <img id="companyLogo" class="logo" src="logo.png"> alt="Haroon & Sons Consulting LLC logo" />
+          <img id="companyLogo" class="logo" src="logo.png" alt="Haroon & Sons Consulting logo" />
         </div>
+
         <div class="hero-mid">
-          <h1 id="companyName">Haroon &amp; Sons Consulting Quote</h1>
+          <h1 id="companyName">Haroon & Sons Consulting Quote</h1>
           <div class="tagline">Fast estimate • Clear scope • Clean totals</div>
         </div>
+
         <div class="hero-right">
           <a id="companyPhone" class="contact" href="tel:8482282528">📞 848-228-2528</a>
           <a id="companyEmail" class="contact" href="mailto:Malik270230@gmail.com">✉️ Malik270230@gmail.com</a>
         </div>
       </div>
-
-      <nav class="tabs" role="tablist" aria-label="Sections">
-        <button class="tab active" data-tab="input">Input</button>
-        <button class="tab" data-tab="rates">Rates</button>
-        <button class="tab" data-tab="quote">Quote</button>
-        <button class="tab" data-tab="settings">Settings</button>
-      </nav>
     </header>
 
-    <main class="content">
-      <!-- INPUT -->
-      <section class="panel active" id="tab-input">
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="inputs">INPUT</button>
+      <button class="tab" data-tab="rates">RATES</button>
+      <button class="tab" data-tab="quote">QUOTE</button>
+      <button class="tab" data-tab="settings">SETTINGS</button>
+    </nav>
+
+    <!-- INPUT -->
+    <section class="panel active" id="tab-inputs">
+      <div class="card">
         <h2>Project Inputs</h2>
 
-        <div class="card">
-          <h3>Project Geometry</h3>
-
-          <div class="grid-1">
-            <label class="field">
-              <span>Project Area (SF)</span>
-              <input id="areaSF" type="number" min="0" step="1" placeholder="e.g., 1400" />
-            </label>
-          </div>
-
-          <div class="grid-2">
-            <label class="field">
-              <span>Project Length (ft) <em>(optional)</em></span>
-              <input id="lenFT" type="number" min="0" step="0.1" placeholder="e.g., 35" />
-            </label>
-            <label class="field">
-              <span>Project Width (ft) <em>(optional)</em></span>
-              <input id="widFT" type="number" min="0" step="0.1" placeholder="e.g., 40" />
-            </label>
-          </div>
-
-          <div class="grid-1">
-            <label class="field">
-              <span>Perimeter (LF) <em>(optional override)</em></span>
-              <input id="perimLF" type="number" min="0" step="0.1" placeholder="leave blank to auto-calc from L×W or Area" />
-            </label>
-
-            <label class="field">
-              <span>Ceiling Height (ft)</span>
-              <input id="ceilFT" type="number" min="0" step="0.1" value="8" />
-            </label>
-          </div>
-
-          <div class="metrics">
-            <div class="metric"><div class="k">Perimeter LF</div><div id="mPerim" class="v">—</div></div>
-            <div class="metric"><div class="k">Wall SF</div><div id="mWall" class="v">—</div></div>
-            <div class="metric"><div class="k">Paint/Drywall SF</div><div id="mPaint" class="v">—</div></div>
-          </div>
+        <h3>Project Geometry</h3>
+        <div class="grid2">
+          <label>Project Area (SF)
+            <input id="areaSF" inputmode="decimal" placeholder="e.g., 1400" />
+          </label>
+          <label>Ceiling Height (ft)
+            <input id="heightFT" inputmode="decimal" placeholder="e.g., 8" />
+          </label>
+          <label>Project Length (ft) (optional)
+            <input id="lenFT" inputmode="decimal" placeholder="e.g., 35" />
+          </label>
+          <label>Project Width (ft) (optional)
+            <input id="widFT" inputmode="decimal" placeholder="e.g., 40" />
+          </label>
+          <label>Perimeter (LF) (optional override)
+            <input id="perimOverride" inputmode="decimal" placeholder="leave blank to auto" />
+          </label>
         </div>
 
-        <div class="card">
-          <h3>Customer / Job Info (for PDF)</h3>
-          <div class="grid-1">
-            <label class="field">
-              <span>Customer Name</span>
-              <input id="custName" type="text" placeholder="Customer name" />
-            </label>
-            <label class="field">
-              <span>Project Address</span>
-              <input id="projAddr" type="text" placeholder="Start typing… (autocomplete)" autocomplete="off" list="addrList" />
-              <datalist id="addrList"></datalist>
-            </label>
-            <label class="field">
-              <span>Notes (optional)</span>
-              <textarea id="notes" rows="3" placeholder="Scope assumptions, exclusions, schedule notes…"></textarea>
-            </label>
-          </div>
-
-          <div class="actions">
-            <button id="btnCalc" class="btn primary">Calculate Quote</button>
-            <button id="btnPrint" class="btn">Print / Save PDF</button>
-          </div>
-
-          <div class="hint">
-            Tip: Enter Project Area (SF) OR Length &amp; Width. Quote won’t calculate without area.
-          </div>
+        <div class="outputs">
+          <div><span class="muted">Perimeter LF</span> <b id="perimOut">—</b></div>
+          <div><span class="muted">Wall SF</span> <b id="wallOut">—</b></div>
+          <div><span class="muted">Paint/Drywall SF</span> <b id="paintOut">—</b></div>
         </div>
 
-        <div class="card accordion">
-          <button class="acc-head" data-acc="scope" aria-expanded="true">▶ Scope Toggles</button>
-          <div class="acc-body open" id="acc-scope"></div>
+        <hr />
+
+        <h3>Customer / Job Info (for PDF)</h3>
+        <div class="grid2">
+          <label>Customer Name
+            <input id="custName" placeholder="Customer full name" />
+          </label>
+          <label>Project Address
+            <input id="custAddr" placeholder="Street, City, State, Zip" />
+          </label>
+        </div>
+        <label>Notes (optional)
+          <textarea id="custNotes" rows="3" placeholder="Any notes you want printed on the quote..."></textarea>
+        </label>
+
+        <div class="btnrow">
+          <button id="btnCalc" class="btn primary">Calculate Quote</button>
+          <button id="btnPrint" class="btn">Print / Save PDF</button>
         </div>
 
-        <div class="card accordion">
-          <button class="acc-head" data-acc="fixtures" aria-expanded="false">▶ Fixture Counts (supply + install)</button>
-          <div class="acc-body" id="acc-fixtures"></div>
+        <div id="calcHint" class="hint">
+          Tip: Enter Project Area (SF) or Length & Width. Quote won’t calculate without area.
         </div>
+      </div>
 
-        <div class="card accordion">
-          <button class="acc-head" data-acc="doors" aria-expanded="false">▶ Doors (quantity)</button>
-          <div class="acc-body" id="acc-doors"></div>
-        </div>
+      <div class="card">
+        <h2>Scope Toggles</h2>
+        <div id="scopeList" class="list"></div>
+      </div>
 
-        <div class="card accordion">
-          <button class="acc-head" data-acc="addons" aria-expanded="false">▶ Add-on Supply Lines</button>
-          <div class="acc-body" id="acc-addons"></div>
-        </div>
-      </section>
+      <div class="card">
+        <h2>Fixture Counts (supply + install)</h2>
+        <div id="fixtureList" class="list"></div>
+      </div>
 
-      <!-- RATES -->
-      <section class="panel" id="tab-rates">
+      <div class="card">
+        <h2>Doors (quantity)</h2>
+        <div id="doorList" class="list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Add-on Supply Lines</h2>
+        <div id="addonList" class="list"></div>
+      </div>
+    </section>
+
+    <!-- RATES -->
+    <section class="panel" id="tab-rates">
+      <div class="card">
         <h2>Rates</h2>
-        <div class="card">
-          <div class="small">Edit base rates here to match your spreadsheet. Changes save to your browser (local storage).</div>
-          <div id="ratesTable" class="table-wrap"></div>
-          <div class="actions">
-            <button id="btnResetRates" class="btn">Reset Rates (from data.json)</button>
-          </div>
-        </div>
-      </section>
+        <label>Service Type
+          <select id="serviceType">
+            <option>Handyman</option>
+            <option selected>Contractor</option>
+          </select>
+        </label>
 
-      <!-- QUOTE -->
-      <section class="panel" id="tab-quote">
+        <div class="hint">
+          This tab is optional. Your quote is generated from the detailed line items in INPUT.
+        </div>
+      </div>
+    </section>
+
+    <!-- QUOTE -->
+    <section class="panel" id="tab-quote">
+      <div class="card">
         <h2>Quote</h2>
+        <div id="quoteSummary" class="summary muted">Run Calculate to generate the quote.</div>
 
-        <div class="card">
-          <h3>Quote Summary</h3>
-          <div id="quoteMeta" class="meta"></div>
-          <div id="quoteTable" class="table-wrap"></div>
-
-          <div class="totals">
-            <div class="total-card">
-              <div class="t">Total Materials</div>
-              <div id="tMaterials" class="n">$0.00</div>
-            </div>
-            <div class="total-card">
-              <div class="t">Total Labor</div>
-              <div id="tLabor" class="n">$0.00</div>
-            </div>
-            <div class="total-card emph">
-              <div class="t">Total</div>
-              <div id="tGrand" class="n">$0.00</div>
-            </div>
-          </div>
+        <div class="tableWrap">
+          <table class="quoteTable">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Unit</th>
+                <th class="num">Units</th>
+                <th class="num">Material</th>
+                <th class="num">Labor</th>
+                <th class="num">Sell Price</th>
+              </tr>
+            </thead>
+            <tbody id="quoteBody"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5" class="num"><b>Total</b></td>
+                <td class="num"><b id="quoteTotal">—</b></td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- SETTINGS -->
-      <section class="panel" id="tab-settings">
+    <!-- SETTINGS -->
+    <section class="panel" id="tab-settings">
+      <div class="card">
         <h2>Settings</h2>
-        <div class="card">
-          <h3>Markups</h3>
-          <div class="grid-2">
-            <label class="field">
-              <span>Materials Markup</span>
-              <input id="muMat" type="number" step="0.01" min="0" />
-              <div class="tiny">Example: 0.25 = 25%</div>
-            </label>
-            <label class="field">
-              <span>Labor Markup</span>
-              <input id="muLab" type="number" step="0.01" min="0" />
-              <div class="tiny">Example: 0.35 = 35%</div>
-            </label>
+        <div class="grid2">
+          <label>Materials Markup (%)
+            <input id="muMat" inputmode="decimal" />
+          </label>
+          <label>Labor Markup (%)
+            <input id="muLab" inputmode="decimal" />
+          </label>
+        </div>
+
+        <div class="hint">
+          Admin unlock (Option A): long-press the logo for 1 second to unlock advanced settings.
+        </div>
+
+        <div id="adminBox" class="adminBox hidden">
+          <h3>Admin (Unlocked)</h3>
+
+          <label style="display:flex;gap:10px;align-items:center;">
+            <input id="tariffEnabled" type="checkbox" />
+            <span>Enable tariff bump</span>
+          </label>
+
+          <label>Tariff bump (% added to MATERIALS only)
+            <input id="tariffPct" inputmode="decimal" value="0" />
+          </label>
+
+          <div class="btnrow">
+            <button id="adminApplyBtn" class="btn primary">Apply</button>
+            <button id="adminClearBtn" class="btn">Lock</button>
           </div>
-          <div class="actions">
-            <button id="btnSaveSettings" class="btn primary">Save Settings</button>
-            <button id="btnResetAll" class="btn">Reset Everything</button>
-          </div>
 
-          <hr class="sep" />
-
-          <h3>Upcoming (next version)</h3>
-          <ul class="bullets">
-            <li><b>Project Mode</b> toggle (Interior vs Deck vs Foundation) with deck boards (PT vs composite), stairs, railings, footings.</li>
-            <li><b>True address autocomplete</b> with Google Places API key (optional) or Mapbox.</li>
-          </ul>
+          <div id="adminStateMsg" class="hint"></div>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
   </div>
-
-  <script type="module" src="app.js?v=77777"></script>
-</body>
-  <!-- Hidden Admin Panel (PIN protected) -->
-<div id="adminOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999;">
-  <div style="max-width:520px; margin:10vh auto; background:#0f1b33; color:#e9eefc; border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:18px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-      <div style="font-weight:700; font-size:16px;">Admin Controls</div>
-      <button id="adminCloseBtn" type="button" style="background:transparent; color:#e9eefc; border:1px solid rgba(255,255,255,.2); border-radius:10px; padding:6px 10px; cursor:pointer;">Close</button>
-    </div>
-
-    <div id="adminLocked" style="margin-top:14px;">
-      <div style="opacity:.85; font-size:13px; margin-bottom:8px;">Enter PIN to unlock</div>
-      <input id="adminPinInput" type="password" inputmode="numeric" placeholder="PIN" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18); background:#0b1220; color:#e9eefc;">
-      <div style="display:flex; gap:10px; margin-top:10px;">
-        <button id="adminUnlockBtn" type="button" style="flex:1; padding:10px 12px; border-radius:10px; border:0; cursor:pointer;">Unlock</button>
-        <button id="adminResetBtn" type="button" style="padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:transparent; color:#e9eefc; cursor:pointer;">Reset</button>
-      </div>
-      <div id="adminPinMsg" style="margin-top:8px; font-size:13px; opacity:.85;"></div>
-    </div>
-
-    <div id="adminUnlocked" style="display:none; margin-top:14px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-        <div>
-          <div style="font-weight:700;">Tariff bump</div>
-          <div style="opacity:.8; font-size:13px;">Adds on top of sqft markup (hidden)</div>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <input id="tariffPct" type="number" min="0" max="30" step="0.5" style="width:90px; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.18); background:#0b1220; color:#e9eefc;">
-          <div>%</div>
-        </div>
-      </div>
-
-      <label style="display:flex; align-items:center; gap:10px; margin-top:12px;">
-        <input id="tariffEnabled" type="checkbox">
-        <span>Enable tariff bump</span>
-      </label>
-
-      <div style="display:flex; gap:10px; margin-top:12px;">
-        <button id="adminApplyBtn" type="button" style="flex:1; padding:10px 12px; border-radius:10px; border:0; cursor:pointer;">Apply</button>
-        <button id="adminClearBtn" type="button" style="padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:transparent; color:#e9eefc; cursor:pointer;">Clear bump</button>
-      </div>
-
-      <div id="adminStateMsg" style="margin-top:10px; font-size:13px; opacity:.85;"></div>
-    </div>
-  </div>
-</div>
- -->
 
   <script src="app.js?v=777777"></script>
 </body>
-</html> 
-
+</html>
