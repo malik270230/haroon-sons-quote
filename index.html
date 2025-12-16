@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Haroon & Sons Consulting Quote</title>
-  <link rel="stylesheet" href="styles.css?v=9999" />
+  <link rel="stylesheet" href="styles.css?v=55555" />
 </head>
 <body>
   <main class="app">
@@ -81,14 +81,16 @@
         </div>
 
         <div class="hint">
-          Tip: If you don’t know length/width, leave them blank. If you know perimeter, enter it in Perimeter override.
+          Tip: Leave length/width blank if you don’t know them. Perimeter override wins if entered.
         </div>
       </div>
 
       <div class="card">
-        <h2>Scope toggles + quantities</h2>
-        <div class="hint">EACH items always have quantity. Kitchen/Wet Bar uses LF/SF quantities too.</div>
+        <h2>Scope toggles</h2>
         <div id="scopeList" class="checklist"></div>
+        <div class="hint">
+          For “each” items (doors/fixtures/appliances), enter the qty on the right.
+        </div>
       </div>
 
       <div class="card admin hidden" id="adminPanel">
@@ -96,7 +98,7 @@
 
         <div class="grid">
           <label class="field">
-            <span>Per-Item Tier Enabled</span>
+            <span>Per-Item Pricing Enabled (tier-based)</span>
             <select id="adminMarkupEnabled">
               <option value="1">ON</option>
               <option value="0">OFF</option>
@@ -104,8 +106,21 @@
           </label>
 
           <label class="field">
-            <span>Per-Item Override % (blank = tier)</span>
+            <span>Per-Item Override % (blank = use tier)</span>
             <input id="adminMarkupOverride" type="number" inputmode="decimal" placeholder="e.g., 35" />
+          </label>
+
+          <label class="field">
+            <span>Global Markup Enabled (whole job)</span>
+            <select id="adminGlobalEnabled">
+              <option value="0">OFF</option>
+              <option value="1">ON</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Global Markup %</span>
+            <input id="adminGlobalPct" type="number" inputmode="decimal" placeholder="e.g., 10" />
           </label>
 
           <label class="field">
@@ -128,7 +143,7 @@
         </div>
 
         <div class="hint">
-          Unlock: Long-press the logo for ~1.2 seconds (iPhone) → enter PIN.
+          Unlock: long-press the logo ~1.2s → enter PIN.
         </div>
         <div class="hint" id="adminStateMsg"></div>
       </div>
@@ -137,9 +152,9 @@
     <section class="panel" id="tab-quote">
       <div class="card">
         <div class="totals">
-          <div class="pill">Subtotal <b id="rawSubtotal">$0.00</b></div>
-          <div class="pill">Adjustments <b id="markupApplied">—</b></div>
-          <div class="pill">Tariff <b id="tariffApplied">—</b></div>
+          <div class="pill">Raw Subtotal <b id="rawSubtotal">$0.00</b></div>
+          <div class="pill">Pricing Status <b id="markupApplied">—</b></div>
+          <div class="pill">Tariff Status <b id="tariffApplied">—</b></div>
         </div>
 
         <div class="tablewrap">
@@ -157,7 +172,7 @@
             <tbody id="quoteBody"></tbody>
             <tfoot>
               <tr>
-                <td class="left" colspan="5">Estimated Total</td>
+                <td class="left" colspan="5">Total</td>
                 <td id="grandTotal">$0.00</td>
               </tr>
             </tfoot>
@@ -170,19 +185,17 @@
         </div>
 
         <div class="hint">
-          Note: This tool is an estimator. Final pricing may change based on field conditions, permits, and material availability.
+          Note: This is an estimator. Final pricing may change based on field conditions, permits, and material availability.
         </div>
       </div>
     </section>
 
     <section class="panel" id="tab-rates">
       <div class="card">
-        <h2>Rates</h2>
-        <div class="hint" id="ratesTier">Enter Project Area (SF) to see tier</div>
+        <h2>Rates (internal)</h2>
         <div class="hint">
-          Raw = base rates. Adjusted = per-item tier rates used for estimates (hidden from customer PDF).
+          Shows raw rates + per-item priced rates based on the current sqft tier (or override).
         </div>
-
         <div class="tablewrap">
           <table class="tbl">
             <thead>
@@ -191,8 +204,8 @@
                 <th>Unit</th>
                 <th>Raw Material</th>
                 <th>Raw Labor</th>
-                <th>Adjusted Material</th>
-                <th>Adjusted Labor</th>
+                <th>Priced Material</th>
+                <th>Priced Labor</th>
               </tr>
             </thead>
             <tbody id="ratesBody"></tbody>
@@ -202,6 +215,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=9999"></script>
+  <script src="app.js?v=55555"></script>
 </body>
 </html>
