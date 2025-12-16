@@ -1,586 +1,690 @@
-(() => {
-  const $ = (id) => document.getElementById(id);
+// Haroon & Sons Quote - single-file app (vanilla JS)
+// Fixes: toggles, calculate, totals, PDF light-mode printing, mobile cut-off.
+//
+// IMPORTANT:
+// - data.json is the source of truth (pulled from your working spreadsheet).
+// - Any edits you make in the Rates tab persist in localStorage.
+// - Print / Save PDF opens a NEW light-mode window so it doesn't print dark backgrounds.
 
-  const state = {
-    data: null,
-    // inputs
-    serviceType: "Contractor",
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+const LS_KEY = "haroon_sons_quote_v1_state";
+
+function money(n){
+  const x = Number(n || 0);
+  return x.toLocaleString(undefined, {style:"currency", currency:"USD"});
+}
+function num(n, digits=2){
+  const x = Number(n || 0);
+  return x.toLocaleString(undefined, {minimumFractionDigits:digits, maximumFractionDigits:digits});
+}
+function safeNum(v){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+function round2(n){ return Math.round((Number(n)||0)*100)/100; }
+
+let DATA = null;
+
+// persistent state
+let state = {
+  inputs: {
     areaSF: "",
-    lengthFt: "",
-    widthFt: "",
-    perimeterOverride: "",
-    heightFt: 8,
+    lenFT: "",
+    widFT: "",
+    perimLF: "",
+    ceilFT: "8",
     custName: "",
-    custAddress: "",
-    custNotes: "",
-    // toggles/qty
-    scopeOn: {},
-    fixtureQty: {},
-    doorQty: {},
-    addonOn: {},
-    // settings
-    muMat: 0.25,
-    muLab: 0.35,
-    multHandy: 1.0,
-    multContract: 1.0,
-    // computed quote
-    lastQuote: null
+    projAddr: "",
+    notes: "",
+  },
+  toggles: {},  // itemId => boolean
+  qty: {},      // itemId => number (for EACH items that need user qty)
+  rates: {},    // itemId => {material_rate, labor_rate}
+  settings: { markups: {materials: 0.25, labor: 0.35} },
+  lastQuote: null,
+};
+
+function save(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+function load(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(!raw) return;
+  try{ state = JSON.parse(raw); }catch(e){ /* ignore */ }
+}
+
+async function loadData(){
+  const res = await fetch("data.json?v=77777", {cache:"no-store"});
+  if(!res.ok) throw new Error("Cannot load data.json");
+  DATA = await res.json();
+}
+
+function initStateFromData(){
+  // company header
+  const c = DATA.settings.company;
+  $("#companyName").textContent = c.name;
+  $("#companyPhone").textContent = "📞 " + c.phone;
+  $("#companyPhone").href = "tel:" + c.phone.replace(/\D/g,"");
+  $("#companyEmail").textContent = "✉️ " + c.email;
+  $("#companyEmail").href = "mailto:" + c.email;
+
+  // settings defaults
+  state.settings = state.settings || {};
+  state.settings.markups = state.settings.markups || {};
+  if(state.settings.markups.materials == null) state.settings.markups.materials = DATA.settings.markups.materials;
+  if(state.settings.markups.labor == null) state.settings.markups.labor = DATA.settings.markups.labor;
+
+  // inputs default
+  if(!state.inputs) state.inputs = {};
+  if(state.inputs.ceilFT == null || state.inputs.ceilFT === "") state.inputs.ceilFT = String(DATA.settings.defaults.ceilingHeight || 8);
+
+  // toggles + qty + rates defaults
+  for(const it of DATA.items){
+    if(state.toggles[it.id] == null) state.toggles[it.id] = !!it.default_on;
+    if(it.unit === "EACH"){
+      if(state.qty[it.id] == null){
+        // default qty:
+        let q = it.default_qty;
+        // Subpanel default: 1 if checked, else 0
+        if(q == null && /subpanel/i.test(it.label)) q = 1;
+        state.qty[it.id] = safeNum(q);
+      }
+    }
+    if(!state.rates[it.id]){
+      state.rates[it.id] = { material_rate: it.material_rate, labor_rate: it.labor_rate };
+    }
+  }
+}
+
+function bindTabs(){
+  $$(".tab").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      $$(".tab").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const tab = btn.dataset.tab;
+      $$(".panel").forEach(p=>p.classList.remove("active"));
+      $("#tab-"+tab).classList.add("active");
+    });
+  });
+}
+
+function bindInputs(){
+  const map = [
+    ["#areaSF","areaSF"],
+    ["#lenFT","lenFT"],
+    ["#widFT","widFT"],
+    ["#perimLF","perimLF"],
+    ["#ceilFT","ceilFT"],
+    ["#custName","custName"],
+    ["#projAddr","projAddr"],
+    ["#notes","notes"],
+  ];
+  for(const [sel,key] of map){
+    const el = $(sel);
+    el.value = state.inputs[key] ?? "";
+    el.addEventListener("input", ()=>{
+      state.inputs[key] = el.value;
+      save();
+      // update metrics live
+      renderMetrics();
+    });
+  }
+
+  $("#btnCalc").addEventListener("click", ()=>{
+    const q = calculateQuote();
+    state.lastQuote = q;
+    save();
+    renderQuote();
+    // jump to quote tab
+    document.querySelector('.tab[data-tab="quote"]').click();
+  });
+
+  $("#btnPrint").addEventListener("click", ()=>{
+    const q = state.lastQuote || calculateQuote();
+    state.lastQuote = q;
+    save();
+    openPrintWindow(q);
+  });
+}
+
+function bindAccordions(){
+  $$(".acc-head").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.dataset.acc;
+      const body = $("#acc-"+id);
+      const isOpen = body.classList.contains("open");
+      body.classList.toggle("open", !isOpen);
+      btn.setAttribute("aria-expanded", String(!isOpen));
+      btn.textContent = (isOpen ? "▶ " : "▼ ") + btn.textContent.replace(/^([▶▼]\s)/,"");
+    });
+  });
+}
+
+function renderAccordions(){
+  // build rows by category
+  const byCat = {
+    "Scope": $("#acc-scope"),
+    "Fixtures": $("#acc-fixtures"),
+    "Doors": $("#acc-doors"),
+    "Add-ons": $("#acc-addons"),
   };
 
-  function fmtMoney(n){
-    if (!isFinite(n)) return "$—";
-    return n.toLocaleString(undefined, { style:"currency", currency:"USD" });
-  }
-  function fmtNum(n){
-    if (!isFinite(n)) return "—";
-    return n.toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
-  }
+  // clear
+  Object.values(byCat).forEach(el=>{ if(el) el.innerHTML=""; });
 
-  function numOrEmpty(v){
-    if (v === "" || v === null || v === undefined) return "";
-    const n = Number(v);
-    return isFinite(n) ? n : "";
-  }
+  for(const it of DATA.items){
+    if(!byCat[it.category]) continue;
 
-  function toNum(v, fallback = 0){
-    const n = Number(v);
-    return isFinite(n) ? n : fallback;
-  }
-
-  function loadSettings(){
-    const raw = localStorage.getItem("hs_quote_settings_v1");
-    if (!raw) return;
-    try{
-      const s = JSON.parse(raw);
-      if (typeof s.muMat === "number") state.muMat = s.muMat;
-      if (typeof s.muLab === "number") state.muLab = s.muLab;
-      if (typeof s.multHandy === "number") state.multHandy = s.multHandy;
-      if (typeof s.multContract === "number") state.multContract = s.multContract;
-    }catch{}
-  }
-
-  function saveSettings(){
-    localStorage.setItem("hs_quote_settings_v1", JSON.stringify({
-      muMat: state.muMat,
-      muLab: state.muLab,
-      multHandy: state.multHandy,
-      multContract: state.multContract
-    }));
-  }
-
-  function computeGeometry(){
-    const H = toNum(state.heightFt, 8);
-
-    // If L & W provided, compute area/perimeter from them
-    const L = toNum(state.lengthFt, 0);
-    const W = toNum(state.widthFt, 0);
-
-    let area = toNum(state.areaSF, 0);
-
-    if (L > 0 && W > 0) area = L * W;
-
-    // If user typed an override perimeter, use it
-    const perOverride = toNum(state.perimeterOverride, 0);
-
-    let perimeter = 0;
-    if (perOverride > 0) {
-      perimeter = perOverride;
-    } else if (L > 0 && W > 0) {
-      perimeter = 2 * (L + W);
-    } else if (area > 0) {
-      // spreadsheet logic: 4*sqrt(area)
-      perimeter = 4 * Math.sqrt(area);
-    }
-
-    const wallSF = perimeter * H;
-    const paintSF = wallSF + area;
-
-    return {
-      areaSF: area,
-      perimeterLF: perimeter,
-      wallSF,
-      paintSF,
-      heightFt: H
-    };
-  }
-
-  function initDefaultsFromData(){
-    const d = state.data;
-    // defaults
-    state.heightFt = d.defaults.heightFt ?? 8;
-    state.muMat = d.defaults.materialsMarkup ?? 0.25;
-    state.muLab = d.defaults.laborMarkup ?? 0.35;
-    state.multHandy = d.defaults.handymanMultiplier ?? 1.0;
-    state.multContract = d.defaults.contractorMultiplier ?? 1.0;
-
-    // toggles default ON for scope + addons except subpanel (commonly off)
-    d.scopeItems.forEach(x => state.scopeOn[x.key] = (x.key !== "subpanel"));
-    d.addons.forEach(x => state.addonOn[x.key] = true);
-
-    // default quantities 0
-    d.fixtures.forEach(x => state.fixtureQty[x.key] = 0);
-    d.doors.forEach(x => state.doorQty[x.key] = 0);
-
-    // name default
-    state.custName = "Haroon Malik";
-  }
-
-  function renderLists(){
-    const d = state.data;
-
-    // Scope toggles
-    const scope = $("scopeList");
-    scope.innerHTML = "";
-    d.scopeItems.forEach(item => {
-      scope.appendChild(makeToggleRow(item.label, item.unit, state.scopeOn[item.key], (checked) => {
-        state.scopeOn[item.key] = checked;
-      }));
-    });
-
-    // Fixtures qty
-    const fixtures = $("fixtureList");
-    fixtures.innerHTML = "";
-    d.fixtures.forEach(item => {
-      fixtures.appendChild(makeQtyRow(item.label, item.unit, state.fixtureQty[item.key], (val) => {
-        state.fixtureQty[item.key] = val;
-      }));
-    });
-
-    // Doors qty
-    const doors = $("doorList");
-    doors.innerHTML = "";
-    d.doors.forEach(item => {
-      doors.appendChild(makeQtyRow(item.label, item.unit, state.doorQty[item.key], (val) => {
-        state.doorQty[item.key] = val;
-      }));
-    });
-
-    // Addons toggles
-    const addons = $("addonList");
-    addons.innerHTML = "";
-    d.addons.forEach(item => {
-      addons.appendChild(makeToggleRow(item.label, item.unit, state.addonOn[item.key], (checked) => {
-        state.addonOn[item.key] = checked;
-      }));
-    });
-  }
-
-  function makeToggleRow(title, unit, checked, onChange){
     const row = document.createElement("div");
     row.className = "row";
 
-    const left = document.createElement("div");
-    left.className = "left";
-    left.innerHTML = `<div class="rowTitle">${escapeHtml(title)}</div><div class="rowSub">${escapeHtml(unit)}</div>`;
-
-    const right = document.createElement("div");
-    right.className = "toggleWrap";
+    const chk = document.createElement("div");
+    chk.className = "chk";
     const cb = document.createElement("input");
     cb.type = "checkbox";
-    cb.className = "checkbox";
-    cb.checked = !!checked;
-    cb.addEventListener("change", () => onChange(cb.checked));
-    right.appendChild(cb);
+    cb.checked = !!state.toggles[it.id];
+    cb.addEventListener("change", ()=>{
+      state.toggles[it.id] = cb.checked;
+      // convenience: Subpanel etc set qty = 1 when turned on
+      if(it.unit === "EACH" && /subpanel/i.test(it.label)){
+        state.qty[it.id] = cb.checked ? 1 : 0;
+      }
+      save();
+    });
+    chk.appendChild(cb);
 
-    row.appendChild(left);
-    row.appendChild(right);
-    return row;
-  }
-
-  function makeQtyRow(title, unit, value, onChange){
-    const row = document.createElement("div");
-    row.className = "row";
-
-    const left = document.createElement("div");
-    left.className = "left";
-    left.innerHTML = `<div class="rowTitle">${escapeHtml(title)}</div><div class="rowSub">${escapeHtml(unit)}</div>`;
+    const mid = document.createElement("div");
+    const lbl = document.createElement("div");
+    lbl.className = "lbl";
+    lbl.textContent = it.label;
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    sub.textContent = it.unit + (it.notes ? " • " + it.notes : "");
+    mid.appendChild(lbl);
+    mid.appendChild(sub);
 
     const right = document.createElement("div");
-    right.className = "toggleWrap";
+    right.className = "right";
 
-    const inp = document.createElement("input");
-    inp.type = "number";
-    inp.inputMode = "decimal";
-    inp.className = "qty";
-    inp.value = String(value ?? 0);
-    inp.addEventListener("input", () => {
-      const n = toNum(inp.value, 0);
-      onChange(n);
-    });
-    right.appendChild(inp);
+    if(it.unit === "EACH" && !/door hardware|door casing|shoe molding|job consumables|plumbing supplies/i.test(it.label)){
+      // user-entered qty
+      const inp = document.createElement("input");
+      inp.type = "number";
+      inp.min = "0";
+      inp.step = "1";
+      inp.value = String(state.qty[it.id] ?? 0);
+      inp.addEventListener("input", ()=>{
+        state.qty[it.id] = safeNum(inp.value);
+        save();
+      });
+      right.appendChild(inp);
+    } else {
+      // show calculated badge
+      const b = document.createElement("span");
+      b.className = "badge";
+      b.textContent = "auto";
+      right.appendChild(b);
+    }
 
-    row.appendChild(left);
+    row.appendChild(chk);
+    row.appendChild(mid);
     row.appendChild(right);
-    return row;
+
+    byCat[it.category].appendChild(row);
+  }
+}
+
+function computeGeometry(){
+  // Area: direct OR length*width
+  const areaInput = safeNum(state.inputs.areaSF);
+  const L = safeNum(state.inputs.lenFT);
+  const W = safeNum(state.inputs.widFT);
+  let area = areaInput;
+  if(area <= 0 && L>0 && W>0) area = L*W;
+
+  const ceil = Math.max(0, safeNum(state.inputs.ceilFT) || 8);
+
+  const perimOverride = safeNum(state.inputs.perimLF);
+  let perim = 0;
+  if(perimOverride > 0){
+    perim = perimOverride;
+  } else if(L>0 && W>0){
+    perim = 2*(L+W);
+  } else if(area>0){
+    // same formula as spreadsheet: 4*sqrt(area)
+    perim = 4*Math.sqrt(area);
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
+  const wallSF = perim * ceil;
+  // Spreadsheet uses WALL_SF + FLOOR_SF for PAINT_SF (walls + ceiling)
+  const paintSF = wallSF + area;
+
+  return { area, L, W, perim, ceil, wallSF, paintSF };
+}
+
+function computeDoorAndFixtureTotals(){
+  // door items are specific labels
+  const doorIds = DATA.items.filter(it=>it.category==="Doors").map(it=>it.id);
+  const totalDoors = doorIds.reduce((sum,id)=> sum + safeNum(state.qty[id]), 0);
+
+  // fixture items are category Fixtures (plumbing)
+  const fixIds = DATA.items.filter(it=>it.category==="Fixtures").map(it=>it.id);
+  const totalFixtures = fixIds.reduce((sum,id)=> sum + safeNum(state.qty[id]), 0);
+
+  const doorCasingLF = totalDoors * 14; // spreadsheet: 14 LF per door
+  const shoeMoldingLF = computeGeometry().perim; // spreadsheet ties shoe molding to perimeter/base
+
+  return { totalDoors, totalFixtures, doorCasingLF, shoeMoldingLF };
+}
+
+function calculateQuote(){
+  const g = computeGeometry();
+  if(g.area <= 0){
+    return { ok:false, error:"Project Area (SF) is required.", geometry:g, rows:[], totals:{materials:0,labor:0,grand:0}, meta:{} };
   }
 
-  function updateGeometryUI(){
-    const g = computeGeometry();
+  const muMat = safeNum(state.settings?.markups?.materials ?? DATA.settings.markups.materials);
+  const muLab = safeNum(state.settings?.markups?.labor ?? DATA.settings.markups.labor);
 
-    $("outPerimeter").textContent = g.perimeterLF > 0 ? fmtNum(g.perimeterLF) : "—";
-    $("outWallSF").textContent = g.wallSF > 0 ? fmtNum(g.wallSF) : "—";
-    $("outPaintSF").textContent = g.paintSF > 0 ? fmtNum(g.paintSF) : "—";
-  }
+  const { totalDoors, totalFixtures, doorCasingLF, shoeMoldingLF } = computeDoorAndFixtureTotals();
 
-  function getServiceMultiplier(){
-    const t = state.serviceType;
-    if (t === "Handyman") return toNum(state.multHandy, 1.0);
-    return toNum(state.multContract, 1.0);
-  }
+  // First pass: compute BASE costs (before markup) for all non-PCT_MAT items
+  const baseRows = [];
+  let rawMatSubtotal = 0;
 
-  function buildRatesTable(){
-    const d = state.data;
-    const tbody = $("ratesTable").querySelector("tbody");
-    tbody.innerHTML = "";
+  for(const it of DATA.items){
+    if(!state.toggles[it.id]) continue;
 
-    Object.keys(d.rates).forEach(name => {
-      const r = d.rates[name];
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${escapeHtml(name)}</td>
-        <td>${escapeHtml(r.unit)}</td>
-        <td class="right">${fmtMoney(toNum(r.mat,0))}${r.unit.includes("SF") || r.unit === "LF" ? " /unit" : " /ea"}</td>
-        <td class="right">${fmtMoney(toNum(r.lab,0))}${r.unit.includes("SF") || r.unit === "LF" ? " /unit" : " /ea"}</td>
-      `;
-      tbody.appendChild(tr);
-    });
+    const rates = state.rates[it.id] || {material_rate: it.material_rate, labor_rate: it.labor_rate};
 
-    $("ratesMeta").textContent =
-      `Materials MU: ${(state.muMat*100).toFixed(0)}% • Labor MU: ${(state.muLab*100).toFixed(0)}%`;
-  }
-
-  function calcQuote(){
-    const d = state.data;
-    const g = computeGeometry();
-
-    if (!(g.areaSF > 0)) {
-      alert("Enter Project Area (SF), or Length & Width.");
-      return null;
+    let units = 0;
+    if(it.unit === "FLOOR_SF") units = g.area;
+    else if(it.unit === "WALL_SF") units = g.wallSF;
+    else if(it.unit === "PAINT_SF") units = g.paintSF;
+    else if(it.unit === "LF"){
+      if(/door casing/i.test(it.label)) units = doorCasingLF;
+      else if(/shoe molding/i.test(it.label)) units = shoeMoldingLF;
+      else units = g.perim;
+    }
+    else if(it.unit === "EACH"){
+      if(/door hardware/i.test(it.label)) units = totalDoors;
+      else if(/plumbing supplies allowance/i.test(it.label)) units = totalFixtures;
+      else if(/subpanel/i.test(it.label)) units = state.toggles[it.id] ? 1 : 0;
+      else units = safeNum(state.qty[it.id]);
+    }
+    else if(it.unit === "PCT_MAT"){
+      // handled later
+      units = rates.material_rate;
     }
 
-    const muMat = toNum(state.muMat, 0.25);
-    const muLab = toNum(state.muLab, 0.35);
-    const serviceMult = getServiceMultiplier();
+    // base costs:
+    let baseMat = 0;
+    let baseLab = 0;
 
-    const totalDoors =
-      toNum(state.doorQty.doorHollow,0) +
-      toNum(state.doorQty.doorSolid,0) +
-      toNum(state.doorQty.doorCloset,0);
-
-    const totalFixtures =
-      toNum(state.fixtureQty.toilet,0) +
-      toNum(state.fixtureQty.vanityFaucet,0) +
-      toNum(state.fixtureQty.showerPkg,0) +
-      toNum(state.fixtureQty.kitchenSinkFaucet,0) +
-      toNum(state.fixtureQty.dishwasher,0) +
-      toNum(state.fixtureQty.fridgeIce,0) +
-      toNum(state.fixtureQty.barSinkFaucet,0) +
-      toNum(state.fixtureQty.upflush,0);
-
-    function unitsFor(unitCode){
-      switch(unitCode){
-        case "FLOOR_SF": return g.areaSF;
-        case "WALL_SF": return g.wallSF;
-        case "PAINT_SF": return g.paintSF;
-        case "LF": return g.perimeterLF;
-        case "EACH": return 1;
-        case "EACH_FIXTURE": return totalFixtures;
-        case "EACH_DOOR": return totalDoors;
-        case "DOOR_CASING_LF": return totalDoors * 14; // spreadsheet: doors*14 LF
-        default: return 0;
-      }
+    if(it.unit === "PCT_MAT"){
+      // placeholder for second pass
+    } else {
+      baseMat = units * safeNum(rates.material_rate);
+      baseLab = units * safeNum(rates.labor_rate);
+      rawMatSubtotal += baseMat;
     }
 
-    // helper to add line
-    const lines = [];
-    function addLine(label, unitCode, units, rateName){
-      if (!(units > 0)) return;
-
-      const rate = d.rates[rateName];
-      if (!rate) return;
-
-      const matRaw = units * toNum(rate.mat,0);
-      const labRaw = units * toNum(rate.lab,0);
-
-      const mat = matRaw * (1 + muMat);
-      const lab = labRaw * (1 + muLab);
-      let sell = (mat + lab) * serviceMult;
-
-      lines.push({
-        item: label,
-        unit: unitCode,
-        units,
-        mat,
-        lab,
-        sell,
-        matRaw,
-        labRaw
-      });
-    }
-
-    // Scope
-    d.scopeItems.forEach(s => {
-      if (!state.scopeOn[s.key]) return;
-      const u = unitsFor(s.unit);
-      addLine(s.label, s.unit, u, s.label);
-    });
-
-    // Fixtures (qty)
-    d.fixtures.forEach(f => {
-      const q = toNum(state.fixtureQty[f.key],0);
-      if (!(q > 0)) return;
-      addLine(f.label, "EACH", q, f.label);
-    });
-
-    // Doors (qty)
-    d.doors.forEach(dr => {
-      const q = toNum(state.doorQty[dr.key],0);
-      if (!(q > 0)) return;
-      addLine(dr.label, "EACH", q, dr.label);
-    });
-
-    // Addons
-    d.addons.forEach(a => {
-      if (!state.addonOn[a.key]) return;
-
-      if (a.unit === "PCT_MAT") {
-        // compute after raw materials subtotal is known
-        return;
-      }
-      const u = unitsFor(a.unit);
-      addLine(a.label, a.unit, u, a.label);
-    });
-
-    // Raw material subtotal (before markup) for PCT_MAT add-on
-    const rawMaterialSubtotal = lines.reduce((sum, x) => sum + (x.matRaw || 0), 0);
-
-    // PCT_MAT line
-    const pctAddon = d.addons.find(x => x.unit === "PCT_MAT" && x.key === "jobConsumables");
-    if (pctAddon && state.addonOn[pctAddon.key]) {
-      const rate = d.rates[pctAddon.label];
-      const pct = toNum(rate?.mat, 0.05);
-      const matRaw = rawMaterialSubtotal * pct;
-      const mat = matRaw * (1 + muMat);
-      const lab = 0;
-      const sell = (mat + lab) * serviceMult;
-      lines.push({
-        item: pctAddon.label,
-        unit: "PCT_MAT",
-        units: pct * 100, // show as percent
-        mat,
-        lab,
-        sell,
-        matRaw,
-        labRaw: 0
-      });
-    }
-
-    // Totals
-    const totMat = lines.reduce((s,x)=>s + x.mat, 0);
-    const totLab = lines.reduce((s,x)=>s + x.lab, 0);
-    const totAll = lines.reduce((s,x)=>s + x.sell, 0);
-
-    return {
-      geometry: g,
-      muMat, muLab,
-      serviceType: state.serviceType,
-      serviceMult,
-      lines,
-      totals: { totMat, totLab, totAll }
-    };
+    baseRows.push({ it, units, baseMat, baseLab });
   }
 
-  function renderQuote(q){
-    state.lastQuote = q;
+  // Second pass: now handle PCT_MAT items (percent of RAW materials subtotal)
+  const rows = [];
+  let totalMatSell = 0;
+  let totalLabSell = 0;
 
-    const g = q.geometry;
-    $("quoteMeta").textContent =
-      `Floor/Area SF: ${fmtNum(g.areaSF)} • Perimeter LF: ${fmtNum(g.perimeterLF)} • Wall SF: ${fmtNum(g.wallSF)} • Paint SF: ${fmtNum(g.paintSF)} • Materials MU: ${(q.muMat*100).toFixed(0)}% • Labor MU: ${(q.muLab*100).toFixed(0)}%`;
+  for(const r of baseRows){
+    const { it, units } = r;
+    const rates = state.rates[it.id] || {material_rate: it.material_rate, labor_rate: it.labor_rate};
 
-    const tbody = $("quoteTable").querySelector("tbody");
-    tbody.innerHTML = "";
+    let baseMat = r.baseMat;
+    let baseLab = r.baseLab;
+    let unitsDisplay = units;
 
-    q.lines.forEach(line => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${escapeHtml(line.item)}</td>
-        <td>${escapeHtml(line.unit)}</td>
-        <td class="right">${line.unit === "PCT_MAT" ? fmtNum(line.units) + "%" : fmtNum(line.units)}</td>
-        <td class="right">${fmtMoney(line.mat)}</td>
-        <td class="right">${fmtMoney(line.lab)}</td>
-        <td class="right"><strong>${fmtMoney(line.sell)}</strong></td>
-      `;
-      tbody.appendChild(tr);
+    if(it.unit === "PCT_MAT"){
+      const pct = safeNum(rates.material_rate); // e.g., 0.05
+      unitsDisplay = pct * 100;
+      baseMat = rawMatSubtotal * pct;
+      baseLab = 0;
+    }
+
+    const matSell = baseMat * (1 + muMat);
+    const labSell = baseLab * (1 + muLab);
+    const sell = matSell + labSell;
+
+    totalMatSell += matSell;
+    totalLabSell += labSell;
+
+    rows.push({
+      item: it.label,
+      unit: it.unit,
+      units: unitsDisplay,
+      baseMat,
+      baseLab,
+      matSell,
+      labSell,
+      sell
     });
-
-    $("totMat").textContent = fmtMoney(q.totals.totMat);
-    $("totLab").textContent = fmtMoney(q.totals.totLab);
-    $("totAll").textContent = fmtMoney(q.totals.totAll);
   }
 
-  function buildPrintArea(){
-    const q = state.lastQuote;
-    if (!q) return;
+  // sort by same order as data.json
+  // (already in order)
 
-    const d = state.data;
-    const g = q.geometry;
+  return {
+    ok:true,
+    geometry: g,
+    rows,
+    totals:{
+      materials: round2(totalMatSell),
+      labor: round2(totalLabSell),
+      grand: round2(totalMatSell + totalLabSell),
+      muMat, muLab
+    },
+    meta:{
+      customer: state.inputs.custName || "",
+      address: state.inputs.projAddr || "",
+      notes: state.inputs.notes || "",
+      date: new Date().toLocaleDateString()
+    }
+  };
+}
 
-    const name = state.custName || "";
-    const addr = state.custAddress || "";
-    const notes = state.custNotes || "";
+function renderMetrics(){
+  const g = computeGeometry();
+  $("#mPerim").textContent = g.area>0 ? num(g.perim,2) : "—";
+  $("#mWall").textContent  = g.area>0 ? num(g.wallSF,2) : "—";
+  $("#mPaint").textContent = g.area>0 ? num(g.paintSF,2) : "—";
+}
 
-    const rows = q.lines.map(line => {
-      const unitsText = (line.unit === "PCT_MAT") ? (fmtNum(line.units) + "%") : fmtNum(line.units);
-      return `
-        <tr>
-          <td>${escapeHtml(line.item)}</td>
-          <td>${escapeHtml(line.unit)}</td>
-          <td style="text-align:right">${unitsText}</td>
-          <td style="text-align:right">${fmtMoney(line.mat)}</td>
-          <td style="text-align:right">${fmtMoney(line.lab)}</td>
-          <td style="text-align:right"><strong>${fmtMoney(line.sell)}</strong></td>
-        </tr>`;
-    }).join("");
-
-    $("printArea").innerHTML = `
-      <div class="pHeader">
-        <div class="pBrand">
-          <img class="pLogo" src="${escapeHtml(d.company.logoPath)}" alt="logo"/>
-          <div>
-            <p class="pTitle">${escapeHtml(d.company.name)} Quote</p>
-            <div class="pMeta">Phone: ${escapeHtml(d.company.phone)} • Email: ${escapeHtml(d.company.email)}</div>
-            <div class="pMeta">Customer: <strong>${escapeHtml(name)}</strong></div>
-            <div class="pMeta">Address: <strong>${escapeHtml(addr)}</strong></div>
-          </div>
-        </div>
-        <div class="pRight">
-          <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
-          <div><strong>Service:</strong> ${escapeHtml(state.serviceType)}</div>
-          <div><strong>Area SF:</strong> ${fmtNum(g.areaSF)}</div>
-          <div><strong>Perimeter LF:</strong> ${fmtNum(g.perimeterLF)}</div>
-          <div><strong>Wall SF:</strong> ${fmtNum(g.wallSF)}</div>
-          <div><strong>Paint SF:</strong> ${fmtNum(g.paintSF)}</div>
-          <div><strong>MU:</strong> Mat ${(q.muMat*100).toFixed(0)}% • Labor ${(q.muLab*100).toFixed(0)}%</div>
-        </div>
-      </div>
-
-      ${notes ? `<div class="pSectionTitle">Notes</div><div style="font-size:12px;margin-bottom:10px;">${escapeHtml(notes)}</div>` : ""}
-
-      <div class="pSectionTitle">Line Items</div>
-      <table class="pTable">
-        <thead>
-          <tr>
-            <th>Item</th><th>Unit</th><th>Units</th><th>Material (w/ markup)</th><th>Labor (w/ markup)</th><th>Sell Price</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-
-      <div class="pTotals">
-        <div class="pTotalsBox">
-          <div class="pTotalsRow"><span>Total Materials</span><strong>${fmtMoney(q.totals.totMat)}</strong></div>
-          <div class="pTotalsRow"><span>Total Labor</span><strong>${fmtMoney(q.totals.totLab)}</strong></div>
-          <div class="pTotalsRow" style="border-top:2px solid #000;padding-top:8px;">
-            <span>TOTAL</span><strong>${fmtMoney(q.totals.totAll)}</strong>
-          </div>
-        </div>
-      </div>
+function renderRates(){
+  const wrap = $("#ratesTable");
+  const rows = DATA.items.map(it=>{
+    const r = state.rates[it.id] || {material_rate: it.material_rate, labor_rate: it.labor_rate};
+    return `
+      <tr>
+        <td class="item">${it.label}<div class="tiny">${it.category}</div></td>
+        <td class="unit">${it.unit}</td>
+        <td class="num"><input data-rate="mat" data-id="${it.id}" type="number" step="0.01" value="${r.material_rate}"></td>
+        <td class="num"><input data-rate="lab" data-id="${it.id}" type="number" step="0.01" value="${r.labor_rate}"></td>
+      </tr>
     `;
-  }
+  }).join("");
 
-  function wireInputs(){
-    $("areaSF").addEventListener("input", (e)=>{ state.areaSF = e.target.value; updateGeometryUI(); });
-    $("lengthFt").addEventListener("input", (e)=>{ state.lengthFt = e.target.value; updateGeometryUI(); });
-    $("widthFt").addEventListener("input", (e)=>{ state.widthFt = e.target.value; updateGeometryUI(); });
-    $("perimeterOverride").addEventListener("input",(e)=>{ state.perimeterOverride = e.target.value; updateGeometryUI(); });
-    $("heightFt").addEventListener("input",(e)=>{ state.heightFt = e.target.value; updateGeometryUI(); });
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Unit</th>
+          <th>Material Rate</th>
+          <th>Labor Rate</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
 
-    $("custName").addEventListener("input",(e)=>{ state.custName = e.target.value; });
-    $("custAddress").addEventListener("input",(e)=>{ state.custAddress = e.target.value; });
-    $("custNotes").addEventListener("input",(e)=>{ state.custNotes = e.target.value; });
-
-    $("btnCalc").addEventListener("click", ()=>{
-      const q = calcQuote();
-      if (!q) return;
-      renderQuote(q);
-      // auto jump to QUOTE tab
-      setTab("quote");
+  // bind inputs
+  wrap.querySelectorAll("input[data-rate]").forEach(inp=>{
+    inp.addEventListener("input", ()=>{
+      const id = inp.dataset.id;
+      const kind = inp.dataset.rate;
+      if(!state.rates[id]) state.rates[id] = {material_rate:0, labor_rate:0};
+      state.rates[id][kind === "mat" ? "material_rate" : "labor_rate"] = safeNum(inp.value);
+      save();
     });
-
-    $("btnPrint").addEventListener("click", ()=>{
-      if (!state.lastQuote){
-        const q = calcQuote();
-        if (!q) return;
-        renderQuote(q);
-      }
-      buildPrintArea();
-      window.print();
-    });
-
-    // settings
-    $("muMat").addEventListener("input",(e)=> state.muMat = toNum(e.target.value, state.muMat));
-    $("muLab").addEventListener("input",(e)=> state.muLab = toNum(e.target.value, state.muLab));
-    $("multHandy").addEventListener("input",(e)=> state.multHandy = toNum(e.target.value, state.multHandy));
-    $("multContract").addEventListener("input",(e)=> state.multContract = toNum(e.target.value, state.multContract));
-
-    $("btnSaveSettings").addEventListener("click", ()=>{
-      saveSettings();
-      buildRatesTable();
-      alert("Settings saved.");
-    });
-
-    // tabs
-    $("tabs").addEventListener("click",(e)=>{
-      const btn = e.target.closest(".tab");
-      if (!btn) return;
-      setTab(btn.dataset.tab);
-    });
-  }
-
-  function setTab(tab){
-    document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
-    document.querySelectorAll(".panel").forEach(p => p.classList.add("hidden"));
-    $(`tab-${tab}`).classList.remove("hidden");
-
-    if (tab === "rates") buildRatesTable();
-    if (tab === "quote" && state.lastQuote) renderQuote(state.lastQuote);
-  }
-
-  async function boot(){
-    // IMPORTANT: your repo should contain: index.html, styles.css, app.js, data.json, logo.png
-    const res = await fetch("./data.json?v=1", { cache: "no-store" });
-    const data = await res.json();
-    state.data = data;
-
-    initDefaultsFromData();
-    loadSettings(); // override defaults if saved previously
-
-    // apply defaults to UI
-    $("heightFt").value = String(state.heightFt);
-
-    $("custName").value = state.custName;
-
-    $("muMat").value = String(state.muMat);
-    $("muLab").value = String(state.muLab);
-    $("multHandy").value = String(state.multHandy);
-    $("multContract").value = String(state.multContract);
-
-    renderLists();
-    updateGeometryUI();
-    buildRatesTable();
-
-    wireInputs();
-    setTab("input");
-  }
-
-  boot().catch(err => {
-    console.error(err);
-    alert("App failed to load. Make sure data.json is in the same folder as app.js and index.html.");
   });
-})();
+
+  $("#btnResetRates").addEventListener("click", ()=>{
+    if(!confirm("Reset all rates back to data.json defaults?")) return;
+    state.rates = {};
+    for(const it of DATA.items){
+      state.rates[it.id] = {material_rate: it.material_rate, labor_rate: it.labor_rate};
+    }
+    save();
+    renderRates();
+  });
+}
+
+function renderQuote(){
+  const q = state.lastQuote || calculateQuote();
+
+  if(!q.ok){
+    $("#quoteMeta").innerHTML = `<div class="badge">Not calculated</div> <span class="small">${q.error}</span>`;
+    $("#quoteTable").innerHTML = "";
+    $("#tMaterials").textContent = money(0);
+    $("#tLabor").textContent = money(0);
+    $("#tGrand").textContent = money(0);
+    return;
+  }
+
+  $("#quoteMeta").innerHTML = `
+    <div>Area SF: <b>${num(q.geometry.area,2)}</b> • Perimeter LF: <b>${num(q.geometry.perim,2)}</b> • Wall SF: <b>${num(q.geometry.wallSF,2)}</b> • Paint SF: <b>${num(q.geometry.paintSF,2)}</b></div>
+    <div>Materials MU: <b>${Math.round(q.totals.muMat*100)}%</b> • Labor MU: <b>${Math.round(q.totals.muLab*100)}%</b></div>
+  `;
+
+  const body = q.rows.map(r=>`
+    <tr>
+      <td class="item">${r.item}</td>
+      <td class="unit">${r.unit}</td>
+      <td class="num">${r.unit==="PCT_MAT" ? num(r.units,1)+"%" : num(r.units,2)}</td>
+      <td class="num">${money(r.matSell)}</td>
+      <td class="num">${money(r.labSell)}</td>
+      <td class="num"><b>${money(r.sell)}</b></td>
+    </tr>
+  `).join("");
+
+  $("#quoteTable").innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Unit</th>
+          <th>Units</th>
+          <th>Material (w/markup)</th>
+          <th>Labor (w/markup)</th>
+          <th>Sell Price</th>
+        </tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>
+  `;
+
+  $("#tMaterials").textContent = money(q.totals.materials);
+  $("#tLabor").textContent = money(q.totals.labor);
+  $("#tGrand").textContent = money(q.totals.grand);
+}
+
+function bindSettings(){
+  $("#muMat").value = state.settings.markups.materials;
+  $("#muLab").value = state.settings.markups.labor;
+
+  $("#btnSaveSettings").addEventListener("click", ()=>{
+    state.settings.markups.materials = safeNum($("#muMat").value);
+    state.settings.markups.labor = safeNum($("#muLab").value);
+    save();
+    alert("Saved.");
+    // refresh quote if already calculated
+    if(state.lastQuote){
+      state.lastQuote = calculateQuote();
+      save();
+      renderQuote();
+    }
+  });
+
+  $("#btnResetAll").addEventListener("click", ()=>{
+    if(!confirm("Reset all saved settings, toggles, quantities, and rates?")) return;
+    localStorage.removeItem(LS_KEY);
+    location.reload();
+  });
+}
+
+function openPrintWindow(q){
+  if(!q.ok){
+    alert(q.error || "Quote not ready.");
+    return;
+  }
+  const c = DATA.settings.company;
+
+  const rows = q.rows.map(r=>`
+    <tr>
+      <td>${escapeHtml(r.item)}</td>
+      <td style="text-align:right">${escapeHtml(r.unit)}</td>
+      <td style="text-align:right">${r.unit==="PCT_MAT" ? num(r.units,1)+"%" : num(r.units,2)}</td>
+      <td style="text-align:right">${money(r.matSell)}</td>
+      <td style="text-align:right">${money(r.labSell)}</td>
+      <td style="text-align:right;font-weight:800">${money(r.sell)}</td>
+    </tr>
+  `).join("");
+
+  const html = `
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quote - ${escapeHtml(c.name)}</title>
+  <style>
+    body{font-family: Arial, sans-serif; margin:28px; color:#111}
+    .top{display:flex; justify-content:space-between; gap:18px; align-items:flex-start}
+    .brand{display:flex; gap:14px; align-items:center}
+    .brand img{width:64px;height:64px;object-fit:contain;border:1px solid #ddd;border-radius:12px}
+    h1{margin:0; font-size:22px}
+    .muted{color:#555; margin-top:6px}
+    .box{margin-top:14px; padding:12px; border:1px solid #ddd; border-radius:10px}
+    table{width:100%; border-collapse:collapse; margin-top:12px}
+    th,td{border-bottom:1px solid #eee; padding:10px 8px; font-size:12px}
+    th{background:#f6f6f6; text-transform:uppercase; letter-spacing:.4px; font-size:11px}
+    .totals{margin-top:14px; display:flex; gap:10px; justify-content:flex-end}
+    .tcard{border:1px solid #ddd; border-radius:10px; padding:10px 14px; min-width:180px}
+    .tcard .k{color:#555; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.3px}
+    .tcard .v{font-size:18px; font-weight:900; margin-top:6px}
+    .grand{border:2px solid #111}
+    @media print{
+      body{margin:10mm}
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand">
+      <img src="logo.png" alt="logo" />
+      <div>
+        <h1>${escapeHtml(c.name)}</h1>
+        <div class="muted">Phone: ${escapeHtml(c.phone)} • Email: ${escapeHtml(c.email)}</div>
+        <div class="muted">Date: ${escapeHtml(q.meta.date)}</div>
+      </div>
+    </div>
+    <div class="box" style="min-width:260px">
+      <div><b>Customer:</b> ${escapeHtml(q.meta.customer || "-")}</div>
+      <div style="margin-top:6px"><b>Address:</b> ${escapeHtml(q.meta.address || "-")}</div>
+    </div>
+  </div>
+
+  ${q.meta.notes ? `<div class="box"><b>Notes:</b><div style="margin-top:6px; white-space:pre-wrap">${escapeHtml(q.meta.notes)}</div></div>` : ""}
+
+  <div class="box">
+    <div><b>Summary:</b> Area SF ${num(q.geometry.area,2)} • Perimeter LF ${num(q.geometry.perim,2)} • Wall SF ${num(q.geometry.wallSF,2)} • Paint SF ${num(q.geometry.paintSF,2)}</div>
+    <div class="muted">Materials MU ${Math.round(q.totals.muMat*100)}% • Labor MU ${Math.round(q.totals.muLab*100)}%</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th style="text-align:right">Unit</th>
+          <th style="text-align:right">Units</th>
+          <th style="text-align:right">Material (w/markup)</th>
+          <th style="text-align:right">Labor (w/markup)</th>
+          <th style="text-align:right">Sell Price</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <div class="totals">
+      <div class="tcard"><div class="k">Total Materials</div><div class="v">${money(q.totals.materials)}</div></div>
+      <div class="tcard"><div class="k">Total Labor</div><div class="v">${money(q.totals.labor)}</div></div>
+      <div class="tcard grand"><div class="k">Total</div><div class="v">${money(q.totals.grand)}</div></div>
+    </div>
+  </div>
+
+  <script>window.onload = () => window.print();</script>
+</body>
+</html>`;
+
+  const w = window.open("", "_blank");
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll("\"","&quot;")
+    .replaceAll("'","&#039;");
+}
+
+// Address autocomplete (lightweight):
+// Uses OpenStreetMap Nominatim. For heavy use, switch to Google Places (paid) later.
+let addrTimer = null;
+function bindAddressAutocomplete(){
+  const input = $("#projAddr");
+  const list = $("#addrList");
+
+  input.addEventListener("input", ()=>{
+    const q = input.value.trim();
+    if(q.length < 5) return;
+    clearTimeout(addrTimer);
+    addrTimer = setTimeout(async ()=>{
+      try{
+        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&q=${encodeURIComponent(q)}`;
+        const res = await fetch(url, {headers: {"Accept-Language":"en"}});
+        if(!res.ok) return;
+        const data = await res.json();
+        list.innerHTML = data.map(x=>`<option value="${escapeHtml(x.display_name)}"></option>`).join("");
+      }catch(e){
+        // ignore
+      }
+    }, 250);
+  });
+}
+
+function main(){
+  load();
+  loadData()
+    .then(()=>{
+      if(!state.toggles) state.toggles = {};
+      if(!state.qty) state.qty = {};
+      if(!state.rates) state.rates = {};
+      if(!state.settings) state.settings = {markups:{materials:0.25,labor:0.35}};
+
+      initStateFromData();
+      save();
+
+      bindTabs();
+      bindInputs();
+      bindAccordions();
+      bindSettings();
+      bindAddressAutocomplete();
+
+      renderAccordions();
+      renderRates();
+      renderMetrics();
+      renderQuote();
+    })
+    .catch(err=>{
+      alert("Error loading app files. Make sure index.html, app.js, styles.css, data.json are all in the same folder on GitHub Pages.");
+      console.error(err);
+    });
+}
+
+main();
