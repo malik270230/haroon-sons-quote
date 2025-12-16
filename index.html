@@ -1,200 +1,50 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
   <title>Haroon & Sons Consulting Quote</title>
-  <link rel="stylesheet" href="styles.css?v=9999" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="app">
-    <header class="hero">
-      <div class="hero-card">
-        <div class="hero-left">
-          <img id="companyLogo" class="logo" alt="Company logo" />
-        </div>
-        <div class="hero-mid">
-          <h1 id="companyName">Haroon &amp; Sons Consulting Quote</h1>
-          <div class="tagline">Fast estimate • Clear scope • Clean totals</div>
-          <div class="subline" id="markupBanner">Markup tier: —</div>
-        </div>
-        <div class="hero-right">
-          <a id="companyPhone" class="contact" href="#">📞</a>
-          <a id="companyEmail" class="contact" href="#">✉️</a>
-        </div>
-      </div>
 
-      <nav class="tabs" role="tablist" aria-label="Quote tabs">
-        <button class="tab active" data-tab="input" role="tab">INPUT</button>
-        <button class="tab" data-tab="quote" role="tab">QUOTE</button>
-        <button class="tab" data-tab="rates" role="tab">RATES</button>
-      </nav>
-    </header>
+<div class="app">
+  <header>
+    <h1>Haroon & Sons Consulting Quote</h1>
+    <div class="sub">Fast estimate • Clear scope • Clean totals</div>
+  </header>
 
-    <section class="panel active" id="tab-input">
-      <div class="card">
-        <h2>Project Geometry</h2>
+  <section class="card">
+    <h2>Project Inputs</h2>
 
-        <div class="grid">
-          <label class="field">
-            <span>Project Area (SF)</span>
-            <input id="inFloorSF" type="number" inputmode="decimal" placeholder="e.g., 1400" />
-          </label>
+    <label>Square Feet
+      <input id="sf" type="number" placeholder="1400">
+    </label>
 
-          <label class="field">
-            <span>Ceiling Height (ft)</span>
-            <input id="inCeilFt" type="number" inputmode="decimal" placeholder="e.g., 8" />
-          </label>
+    <label>Ceiling Height (ft)
+      <input id="ceil" type="number" value="8">
+    </label>
 
-          <label class="field">
-            <span>Project Length (ft) (optional)</span>
-            <input id="inLenFt" type="number" inputmode="decimal" placeholder="e.g., 35" />
-          </label>
+    <label>Perimeter (LF – optional)
+      <input id="perim" type="number" placeholder="auto">
+    </label>
+  </section>
 
-          <label class="field">
-            <span>Project Width (ft) (optional)</span>
-            <input id="inWidFt" type="number" inputmode="decimal" placeholder="e.g., 40" />
-          </label>
+  <section class="card">
+    <h2>Scope</h2>
+    <div id="scope"></div>
+  </section>
 
-          <label class="field">
-            <span>Perimeter (LF) (optional override)</span>
-            <input id="inPerimLF" type="number" inputmode="decimal" placeholder="leave blank to auto-calc" />
-          </label>
-        </div>
+  <section class="card">
+    <h2>Totals</h2>
+    <div class="line">Raw Subtotal: <b id="raw">$0.00</b></div>
+    <div class="line">Markup Applied: <b id="markup">—</b></div>
+    <div class="line">Tariff: <b id="tariff">OFF</b></div>
+    <hr>
+    <div class="total">TOTAL: <span id="total">$0.00</span></div>
+  </section>
+</div>
 
-        <div class="divider"></div>
-
-        <h3>Calculated (auto)</h3>
-        <div class="grid compact">
-          <div class="stat">
-            <div class="k">Perimeter (LF)</div>
-            <div class="v" id="outPerimLF">—</div>
-          </div>
-          <div class="stat">
-            <div class="k">Wall Area (SF)</div>
-            <div class="v" id="outWallSF">—</div>
-          </div>
-          <div class="stat">
-            <div class="k">Paint Area (Walls + Ceiling) (SF)</div>
-            <div class="v" id="outPaintSF">—</div>
-          </div>
-        </div>
-
-        <div class="hint">
-          Tip: If you don’t know length/width, leave them blank. If you know perimeter, enter it in Perimeter override.
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Scope toggles</h2>
-        <div id="scopeList" class="checklist"></div>
-      </div>
-
-      <div class="card admin hidden" id="adminPanel">
-        <h2>Admin Controls</h2>
-
-        <div class="grid">
-          <label class="field">
-            <span>Markup Enabled</span>
-            <select id="adminMarkupEnabled">
-              <option value="1">ON</option>
-              <option value="0">OFF</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Markup Override % (blank = use tier)</span>
-            <input id="adminMarkupOverride" type="number" inputmode="decimal" placeholder="e.g., 35" />
-          </label>
-
-          <label class="field">
-            <span>Tariff Enabled</span>
-            <select id="adminTariffEnabled">
-              <option value="0">OFF</option>
-              <option value="1">ON</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Tariff %</span>
-            <input id="adminTariffPct" type="number" inputmode="decimal" placeholder="e.g., 8" />
-          </label>
-        </div>
-
-        <div class="btnrow">
-          <button class="btn" id="adminApplyBtn">Apply</button>
-          <button class="btn ghost" id="adminResetBtn">Reset Admin</button>
-        </div>
-
-        <div class="hint">
-          Unlock: Long-press the logo for ~1.2 seconds (iPhone) → enter PIN.
-        </div>
-        <div class="hint" id="adminStateMsg"></div>
-      </div>
-    </section>
-
-    <section class="panel" id="tab-quote">
-      <div class="card">
-        <div class="totals">
-          <div class="pill">Raw Subtotal <b id="rawSubtotal">$0.00</b></div>
-          <div class="pill">Markup Applied <b id="markupApplied">—</b></div>
-          <div class="pill">Tariff Applied <b id="tariffApplied">—</b></div>
-        </div>
-
-        <div class="tablewrap">
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th class="left">Item</th>
-                <th>Unit</th>
-                <th>Qty</th>
-                <th>Material</th>
-                <th>Labor</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody id="quoteBody"></tbody>
-            <tfoot>
-              <tr>
-                <td class="left" colspan="5">Total</td>
-                <td id="grandTotal">$0.00</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <div class="btnrow">
-          <button class="btn" id="printBtn">Print / Save PDF</button>
-          <button class="btn ghost" id="clearBtn">Clear (this device)</button>
-        </div>
-
-        <div class="hint">
-          Note: This tool is an estimator. Final pricing may change based on field conditions, permits, and material availability.
-        </div>
-      </div>
-    </section>
-
-    <section class="panel" id="tab-rates">
-      <div class="card">
-        <h2>Rates (raw)</h2>
-        <div class="hint">These are raw rates. Sqft markup + optional tariff are applied on the QUOTE tab.</div>
-        <div class="tablewrap">
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th class="left">Item</th>
-                <th>Unit</th>
-                <th>Material Rate</th>
-                <th>Labor Rate</th>
-              </tr>
-            </thead>
-            <tbody id="ratesBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script src="app.js?v=9999"></script>
+<script src="app.js"></script>
 </body>
 </html>
