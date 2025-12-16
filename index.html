@@ -8,8 +8,6 @@
 </head>
 <body>
   <main class="app">
-    <div id="fatal" class="fatal hidden"></div>
-
     <header class="hero">
       <div class="hero-card">
         <div class="hero-left">
@@ -89,7 +87,6 @@
 
       <div class="card">
         <h2>Scope toggles</h2>
-        <div class="hint">For EACH/LF items, set Qty on the right. SF items are auto-calculated.</div>
         <div id="scopeList" class="checklist"></div>
       </div>
 
@@ -106,7 +103,7 @@
           </label>
 
           <label class="field">
-            <span>Markup Override % (blank = use sqft tier)</span>
+            <span>Markup Override % (blank = use tier)</span>
             <input id="adminMarkupOverride" type="number" inputmode="decimal" placeholder="e.g., 35" />
           </label>
 
@@ -119,7 +116,7 @@
           </label>
 
           <label class="field">
-            <span>Tariff % (applies to MATERIAL only)</span>
+            <span>Tariff %</span>
             <input id="adminTariffPct" type="number" inputmode="decimal" placeholder="e.g., 8" />
           </label>
         </div>
@@ -130,7 +127,7 @@
         </div>
 
         <div class="hint">
-          Unlock: Long-press the logo for ~1.2 seconds (iPhone) → enter PIN.
+          Unlock: Long-press the logo for ~1.2 seconds → enter PIN.
         </div>
         <div class="hint" id="adminStateMsg"></div>
       </div>
@@ -180,7 +177,7 @@
     <section class="panel" id="tab-rates">
       <div class="card">
         <h2>Rates (raw)</h2>
-        <div class="hint">Raw rates only. Sqft markup + optional tariff are applied on the QUOTE tab.</div>
+        <div class="hint">These are raw rates. Sqft markup + optional tariff are applied on the QUOTE tab.</div>
         <div class="tablewrap">
           <table class="tbl">
             <thead>
