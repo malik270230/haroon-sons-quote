@@ -184,7 +184,7 @@ const printDateStamp = $("#printDateStamp");
   
   function inferBucket(label){
     const s=(label||"").toLowerCase();
-    if(/frame|stud|insul|soffit|fireblock|blocking/.test(s)) return "Framing & Insulation";
+    if(/fram|frame|stud|insul|soffit|fireblock|blocking/.test(s)) return "Framing & Insulation";
     if(/elect|recess|outlet|switch|panel|lighting|low voltage/.test(s)) return "Electrical";
     if(/drywall|sheetrock|tape|mud|finish|skim|paint|primer/.test(s)) return "Drywall, Finish & Painting";
     if(/floor|lvp|tile|carpet|trim|baseboard|molding|shoe/.test(s)) return "Flooring & Trim";
