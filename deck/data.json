@@ -1,0 +1,209 @@
+{
+  "company": {
+    "name": "Haroon & Sons Consulting Deck Quote",
+    "phone": "848-228-2528",
+    "email": "Malik270230@gmail.com",
+    "logo": "logo.png"
+  },
+  "adminPin": "2528",
+  "pricingModes": {
+    "handyman": {
+      "label": "Handyman+ (competitive)",
+      "markupTiers": [
+        {
+          "maxSF": 300,
+          "pct": 0.25
+        },
+        {
+          "maxSF": 600,
+          "pct": 0.22
+        },
+        {
+          "maxSF": 1000,
+          "pct": 0.2
+        },
+        {
+          "maxSF": 1600,
+          "pct": 0.18
+        },
+        {
+          "maxSF": 999999,
+          "pct": 0.16
+        }
+      ],
+      "matMult": 1.0,
+      "labMult": 1.0,
+      "includeEngineeringDefault": false
+    },
+    "gc": {
+      "label": "GC / Premium",
+      "markupTiers": [
+        {
+          "maxSF": 300,
+          "pct": 0.32
+        },
+        {
+          "maxSF": 600,
+          "pct": 0.28
+        },
+        {
+          "maxSF": 1000,
+          "pct": 0.25
+        },
+        {
+          "maxSF": 1600,
+          "pct": 0.22
+        },
+        {
+          "maxSF": 999999,
+          "pct": 0.2
+        }
+      ],
+      "matMult": 1.1,
+      "labMult": 1.18,
+      "includeEngineeringDefault": true
+    }
+  },
+  "rules": {
+    "railingRequiredHeightFt": 2.5,
+    "defaultFootingSFPerEach": 36,
+    "minFootings": 6,
+    "heightMults": [
+      {
+        "maxHeightFt": 3,
+        "mult": 1.0
+      },
+      {
+        "maxHeightFt": 6,
+        "mult": 1.15
+      },
+      {
+        "maxHeightFt": 999,
+        "mult": 1.3
+      }
+    ]
+  },
+  "items": [
+    {
+      "id": "deck_framing",
+      "label": "Deck Framing (joists/beams/posts/hardware)",
+      "unit": "DECK_SF",
+      "mat": 9.5,
+      "lab": 6.5,
+      "heightSensitive": true,
+      "bucket": "Structure"
+    },
+    {
+      "id": "footings",
+      "label": "Footings (dig + sonotube + concrete + hardware)",
+      "unit": "FOOTING_COUNT",
+      "mat": 95.0,
+      "lab": 180.0,
+      "bucket": "Structure"
+    },
+    {
+      "id": "ledger_attach",
+      "label": "Ledger Attach + Flashing (if attached to house)",
+      "unit": "EACH",
+      "mat": 160.0,
+      "lab": 280.0,
+      "bucket": "Structure"
+    },
+    {
+      "id": "surface_pt",
+      "label": "Decking Surface \u2013 Pressure Treated (boards + fasteners)",
+      "unit": "DECK_SF",
+      "mat": 5.75,
+      "lab": 4.75,
+      "group": "surface",
+      "bucket": "Decking"
+    },
+    {
+      "id": "surface_comp",
+      "label": "Decking Surface \u2013 Composite (Trex/TimberTech class)",
+      "unit": "DECK_SF",
+      "mat": 11.5,
+      "lab": 4.75,
+      "group": "surface",
+      "bucket": "Decking"
+    },
+    {
+      "id": "rail_pt",
+      "label": "Railing \u2013 Pressure Treated (installed)",
+      "unit": "RAIL_LF",
+      "mat": 22.0,
+      "lab": 22.0,
+      "group": "rail",
+      "bucket": "Railing"
+    },
+    {
+      "id": "rail_comp",
+      "label": "Railing \u2013 Composite (installed)",
+      "unit": "RAIL_LF",
+      "mat": 42.0,
+      "lab": 18.0,
+      "group": "rail",
+      "bucket": "Railing"
+    },
+    {
+      "id": "stairs_steps",
+      "label": "Stairs (per step, includes stringers + treads + install)",
+      "unit": "STAIR_STEP",
+      "mat": 48.0,
+      "lab": 75.0,
+      "bucket": "Stairs"
+    },
+    {
+      "id": "stair_landing",
+      "label": "Stair Landing (if needed)",
+      "unit": "EACH",
+      "mat": 200.0,
+      "lab": 420.0,
+      "bucket": "Stairs"
+    },
+    {
+      "id": "demo_existing",
+      "label": "Demo / Removal of existing deck (allowance)",
+      "unit": "DECK_SF",
+      "mat": 1.25,
+      "lab": 3.75,
+      "bucket": "Demo"
+    },
+    {
+      "id": "permit_allow",
+      "label": "Permit + Inspections Allowance (permit mode only)",
+      "unit": "EACH",
+      "mat": 450.0,
+      "lab": 250.0,
+      "permitOnly": true,
+      "bucket": "Permit/Admin"
+    },
+    {
+      "id": "engineering_allow",
+      "label": "Engineering / Inspection Buffer (permit mode only)",
+      "unit": "EACH",
+      "mat": 0.0,
+      "lab": 450.0,
+      "permitOnly": true,
+      "bucket": "Permit/Admin"
+    },
+    {
+      "id": "job_consumables",
+      "label": "Job Consumables & Fasteners (% of raw materials)",
+      "unit": "PCT_MAT",
+      "pctOfMaterials": 4,
+      "mat": 0,
+      "lab": 0,
+      "bucket": "General Conditions"
+    }
+  ],
+  "bucketOrder": [
+    "Structure",
+    "Decking",
+    "Railing",
+    "Stairs",
+    "Demo",
+    "Permit/Admin",
+    "General Conditions"
+  ]
+}
