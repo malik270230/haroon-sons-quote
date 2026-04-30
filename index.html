@@ -3,39 +3,43 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Haroon &amp; Sons Consulting Quote</title>
+  <title>Haroon & Sons Consulting Quote</title>
   <link rel="stylesheet" href="styles.css?v=1" />
 </head>
+
 <body>
   <main class="app">
+
     <header class="hero">
       <div class="hero-card">
         <div class="hero-left">
           <img id="companyLogo" class="logo" alt="Company logo" src="logo.png?v=1" />
         </div>
+
         <div class="hero-mid">
-          <h1 id="companyName">Haroon &amp; Sons Consulting Quote</h1>
-          <div class="tagline">Fast estimate • Clear scope • Clean totals</div>
+          <h1 id="companyName">Haroon & Sons Consulting Quote</h1>
+          <div class="tagline">Home Addition Estimate Tool</div>
           <div class="subline" id="markupBanner">Pricing tier: —</div>
         </div>
+
         <div class="hero-right">
-          <a id="companyPhone" class="contact" href="#">📞</a>
-          <a id="companyEmail" class="contact" href="#">✉️</a>
+          <a id="companyPhone" class="contact" href="#"></a>
+          <a id="companyEmail" class="contact" href="#"></a>
         </div>
       </div>
-<div style="display:flex;gap:10px;justify-content:center;margin:12px 0;">
-  <a href="/haroon-sons-quote/"
-     style="padding:10px 14px;border-radius:12px;border:1px solid #4aa3ff;color:#e9eefc;text-decoration:none;">
-    Quote Tool
-  </a>
 
-  <a href="/haroon-sons-quote/deck/"
-     style="padding:10px 14px;border-radius:12px;border:1px solid #4aa3ff;color:#e9eefc;text-decoration:none;">
-    Deck Tool
-  </a>
-</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin:12px 0;">
+        <a href="/haroon-sons-quote/"
+          style="padding:10px 14px;border-radius:12px;border:1px solid #4aa3ff;color:#e9eefc;text-decoration:none;">
+          Quote Tool
+        </a>
+        <a href="/haroon-sons-quote/deck/"
+          style="padding:10px 14px;border-radius:12px;border:1px solid #4aa3ff;color:#e9eefc;text-decoration:none;">
+          Deck Tool
+        </a>
+      </div>
 
-      <nav class="tabs" role="tablist" aria-label="Quote tabs">
+      <nav class="tabs" role="tablist">
         <button class="tab active" data-tab="input" role="tab">INPUT</button>
         <button class="tab" data-tab="quote" role="tab">QUOTE</button>
         <button class="tab" data-tab="rates" role="tab">RATES</button>
@@ -43,79 +47,80 @@
     </header>
 
     <section class="panel active" id="tab-input">
+
       <div class="card">
-        <h2>Project Geometry</h2>
+        <h2>Customer</h2>
+        <div class="grid">
+          <label class="field">
+            <span>Customer Name</span>
+            <input id="inClientName" type="text" placeholder="e.g., Vishv & Shipla Jeet" />
+          </label>
+
+          <label class="field">
+            <span>Property Address</span>
+            <input id="inClientAddress" type="text" placeholder="Street, City, State ZIP" />
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Home Addition Geometry</h2>
 
         <div class="grid">
           <label class="field">
+            <span>Length (ft)</span>
+            <input id="inLenFt" type="number" inputmode="decimal" placeholder="e.g., 55" />
+          </label>
+
+          <label class="field">
+            <span>Width (ft)</span>
+            <input id="inWidFt" type="number" inputmode="decimal" placeholder="e.g., 15" />
+          </label>
+
+          <label class="field">
             <span>Project Area (SF)</span>
-            <input id="inFloorSF" type="number" inputmode="decimal" placeholder="e.g., 1400" />
+            <input id="inFloorSF" type="number" inputmode="decimal" placeholder="auto or manual" />
           </label>
 
           <label class="field">
             <span>Ceiling Height (ft)</span>
-            <input id="inCeilFt" type="number" inputmode="decimal" placeholder="e.g., 8" />
+            <input id="inCeilFt" type="number" inputmode="decimal" value="8" />
           </label>
 
           <label class="field">
-            <span>Project Length (ft) (optional)</span>
-            <input id="inLenFt" type="number" inputmode="decimal" placeholder="e.g., 35" />
-          </label>
-
-          <label class="field">
-            <span>Project Width (ft) (optional)</span>
-            <input id="inWidFt" type="number" inputmode="decimal" placeholder="e.g., 40" />
-          </label>
-
-          <label class="field">
-            <span>Perimeter (LF) (optional override)</span>
-            <input id="inPerimLF" type="number" inputmode="decimal" placeholder="leave blank to auto-calc" />
+            <span>Perimeter Override (LF)</span>
+            <input id="inPerimLF" type="number" inputmode="decimal" placeholder="optional" />
           </label>
         </div>
 
         <div class="divider"></div>
 
-        <h3>Calculated (auto)</h3>
         <div class="grid compact">
           <div class="stat">
-            <div class="k">Perimeter (LF)</div>
+            <div class="k">Area</div>
+            <div class="v" id="outAreaSF">—</div>
+          </div>
+
+          <div class="stat">
+            <div class="k">Perimeter</div>
             <div class="v" id="outPerimLF">—</div>
           </div>
+
           <div class="stat">
-            <div class="k">Wall Area (SF)</div>
+            <div class="k">Wall Area</div>
             <div class="v" id="outWallSF">—</div>
           </div>
+
           <div class="stat">
-            <div class="k">Paint Area (Walls + Ceiling) (SF)</div>
+            <div class="k">Paint Area</div>
             <div class="v" id="outPaintSF">—</div>
           </div>
         </div>
-
-        <div class="hint">
-          Tip: If you don’t know length/width, leave them blank. If you know perimeter, enter it in Perimeter override.
-        </div>
-      
-
-<div class="card">
-  <h2>Customer</h2>
-  <div class="grid">
-    <label class="field">
-      <span>Customer Name</span>
-      <input id="inClientName" type="text" placeholder="e.g., John Smith" />
-    </label>
-    <label class="field">
-      <span>Property Address</span>
-      <input id="inClientAddress" type="text" placeholder="Street, City, State ZIP" />
-    </label>
-  </div>
-  <div class="hint">This prints on the PDF header.</div>
-</div>
-</div>
+      </div>
 
       <div class="card">
-        <h2>Scope + quantities</h2>
+        <h2>Scope</h2>
         <div id="scopeList" class="checklist"></div>
-        <div class="hint">For EACH items (doors, dishwasher, sinks, etc.) enter quantity on the right after you check it ON.</div>
       </div>
 
       <div class="card admin hidden" id="adminPanel">
@@ -123,16 +128,8 @@
 
         <div class="grid">
           <label class="field">
-            <span>Per-item Tier Pricing Enabled</span>
-            <select id="adminMarkupEnabled">
-              <option value="1">ON</option>
-              <option value="0">OFF</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Per-item Tier Override % (blank = use tier)</span>
-            <input id="adminMarkupOverride" type="number" inputmode="decimal" placeholder="e.g., 35" />
+            <span>Pricing Markup %</span>
+            <input id="adminMarkupOverride" type="number" inputmode="decimal" placeholder="e.g., 30" />
           </label>
 
           <label class="field">
@@ -147,6 +144,24 @@
             <span>Tariff %</span>
             <input id="adminTariffPct" type="number" inputmode="decimal" placeholder="e.g., 8" />
           </label>
+
+          <label class="field">
+            <span>Override Final Price</span>
+            <select id="adminOverrideEnabled">
+              <option value="0">OFF</option>
+              <option value="1">ON</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Manual Final Price ($)</span>
+            <input id="adminOverrideTotal" type="number" inputmode="decimal" placeholder="e.g., 23500" />
+          </label>
+        </div>
+
+        <div class="totals">
+          <div class="pill">Calculated Total <b id="adminCalculatedTotal">$0.00</b></div>
+          <div class="pill">Override Difference <b id="adminOverrideDifference">$0.00</b></div>
         </div>
 
         <div class="btnrow">
@@ -155,27 +170,23 @@
         </div>
 
         <div class="hint">
-          Unlock: Long-press the logo for ~1.2 seconds (iPhone) → enter PIN.
+          Unlock: Long-press the logo for about 1.2 seconds, then enter PIN.
         </div>
         <div class="hint" id="adminStateMsg"></div>
       </div>
+
     </section>
 
     <section class="panel" id="tab-quote">
       <div class="card">
-        
-        <!-- CLIENT PROPOSAL (Buckets only) -->
+
         <div id="clientPrint" class="printBlock">
           <div class="printTop">
             <div class="printCompanyBlock">
               <img class="printLogo" alt="Company logo" src="logo.png" />
               <div class="printCompanyText">
-                <div class="printTitle" id="clientPrintCompanyName">Haroon &amp; Sons Consulting Quote</div>
-                <div class="printSub">Client Proposal • Category Summary (No material/labor detail)</div>
-                <div class="printContactStack">
-                  <div id="clientPrintCompanyPhone"></div>
-                  <div id="clientPrintCompanyEmail"></div>
-                </div>
+                <div class="printTitle">Haroon & Sons Consulting Quote</div>
+                <div class="printSub">Client Proposal</div>
               </div>
             </div>
 
@@ -213,113 +224,56 @@
               </tfoot>
             </table>
           </div>
-
-          <div class="hint noPrint">Client Proposal prints as Page 1 (buckets only).</div>
         </div>
 
-        <!-- INTERNAL BREAKDOWN (Detailed) -->
         <div id="internalPrint" class="printBlock">
-          <div class="printHeader">
-  <div class="printTop">
-    <div class="printCompanyBlock">
-      <img class="printLogo" alt="Company logo" src="logo.png" />
-      <div class="printCompanyText">
-        <div class="printTitle" id="printCompanyName">Haroon &amp; Sons Consulting Quote</div>
-        <div class="printSub">Fast estimate • Clear scope • Clean totals</div>
-        <div class="printContactStack">
-          <div id="printCompanyPhone"></div>
-          <div id="printCompanyEmail"></div>
+          <h2>Internal Breakdown</h2>
+
+          <div class="totals noPrint">
+            <div class="pill">Materials <b id="rawMatTotal">$0.00</b></div>
+            <div class="pill">Labor <b id="rawLabTotal">$0.00</b></div>
+            <div class="pill">Calculated <b id="rawGrandTotal">$0.00</b></div>
+            <div class="pill">Final <b id="grandTotal">$0.00</b></div>
+          </div>
+
+          <div class="tablewrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th class="left">Item</th>
+                  <th>Unit</th>
+                  <th>Qty</th>
+                  <th>Mat</th>
+                  <th>Labor</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="quoteBody"></tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    </div>
-
-    <div class="printRightBlock">
-      <div class="printTotalBox">
-        <div class="k">Total</div>
-        <div class="v" id="printGrandTotal">$0.00</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="printMid">
-    <div class="printClientBox">
-      <div class="row"><span class="k">Client:</span> <span id="printClientName">—</span></div>
-      <div class="row"><span class="k">Address:</span> <span id="printClientAddress">—</span></div>
-    </div>
-    <div class="printMetaBox">
-      <div id="printProjectSummary" class="printMeta"></div>
-      <div class="printMeta small" id="printDateStamp"></div>
-    </div>
-  </div>
-
-  <hr class="printRule" />
-</div>
-
-        <div class="totals noPrint">
-          <div class="pill">Raw Materials <b id="rawMatTotal">$0.00</b></div>
-          <div class="pill">Raw Labor <b id="rawLabTotal">$0.00</b></div>
-          <div class="pill">Raw Total <b id="rawGrandTotal">$0.00</b></div>
-        </div>
-
-        <div class="totals noPrint">
-          <div class="pill">Priced Subtotal <b id="rawSubtotal">$0.00</b></div>
-          <div class="pill">Pricing Applied <b id="markupApplied">—</b></div>
-          <div class="pill">Tariff Applied <b id="tariffApplied">—</b></div>
-        </div>
-
-        <div class="tablewrap">
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th class="left">Item</th>
-                <th>Unit</th>
-                <th>Qty</th>
-                <th>Unit Mat</th>
-                <th>Unit Lab</th>
-                <th>Mat Total</th>
-                <th>Lab Total</th>
-                <th>Line Total</th>
-              </tr>
-            </thead>
-            <tbody id="quoteBody"></tbody>
-            <tfoot>
-              <tr>
-                <td class="left" colspan="7">Total</td>
-                <td id="grandTotal">$0.00</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-                </div>
 
         <div class="btnrow noPrint">
-          <button class="btn" id="printClientBtn">Print Client Proposal (Buckets)</button>
+          <button class="btn" id="printClientBtn">Print Client Proposal</button>
           <button class="btn ghost" id="printInternalBtn">Print Internal Breakdown</button>
-          <button class="btn ghost" id="printBothBtn">Print BOTH (2 pages)</button>
-          <button class="btn ghost" id="clearBtn">Clear (this device)</button>
+          <button class="btn ghost" id="printBothBtn">Print BOTH</button>
+          <button class="btn ghost" id="clearBtn">Clear</button>
         </div>
 
-        <div class="hint noPrint">
-          Note: This tool is an estimator. Final pricing may change based on field conditions, permits, and material availability.
-        </div>
       </div>
     </section>
 
     <section class="panel" id="tab-rates">
       <div class="card">
         <h2>Rates</h2>
-        <div class="hint">Raw rates + “priced” rates (tier pricing applied). Customers do not see this in the PDF.</div>
         <div class="tablewrap">
           <table class="tbl ratesTbl">
             <thead>
               <tr>
                 <th class="left">Item</th>
                 <th>Unit</th>
-                <th>Raw Mat</th>
-                <th>Raw Lab</th>
-                <th>Priced Mat</th>
-                <th>Priced Lab</th>
+                <th>Material Rate</th>
+                <th>Labor Rate</th>
               </tr>
             </thead>
             <tbody id="ratesBody"></tbody>
@@ -327,6 +281,7 @@
         </div>
       </div>
     </section>
+
   </main>
 
   <script src="app.js?v=1"></script>
